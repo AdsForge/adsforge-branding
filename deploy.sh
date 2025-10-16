@@ -5,6 +5,7 @@ npm -v
 
 echo 'Changing to deployment directory'
 cd /home/ubuntu/app
+pwd
 
 echo 'Extracting deployment package'
 rm -rf .next
