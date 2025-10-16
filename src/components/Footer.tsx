@@ -14,6 +14,12 @@ export default function Footer() {
           <Link href="#live-demo" className="opacity-80 hover:opacity-100">
             Live demo
           </Link>
+          <Link href="/privacy" className="opacity-80 hover:opacity-100">
+            Privacy
+          </Link>
+          <Link href="/terms" className="opacity-80 hover:opacity-100">
+            Terms
+          </Link>
           <Link
             href="mailto:adsforgeio@gmail.com"
             className="opacity-80 hover:opacity-100"
