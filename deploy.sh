@@ -13,7 +13,7 @@ echo 'Extracting deployment package'
 tar -xzf deploy.tar.gz --overwrite
 
 echo 'Installing packages'
-npm install
+pnpm install
 
 echo 'Deleting the archive'
 rm -rf deploy.tar.gz
