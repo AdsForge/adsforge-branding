@@ -51,6 +51,7 @@ jobs:
             package.json
             deploy.sh
             pnpm-lock.yaml
+            prisma/
 
   deploy:
     needs: build-and-test
@@ -85,7 +86,7 @@ jobs:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           # Create deployment package
-          tar -czf deploy.tar.gz .next public package.json pnpm-lock.yaml deploy.sh
+          tar -czf deploy.tar.gz .next public prisma package.json pnpm-lock.yaml deploy.sh
 
           # Copy deployment package to EC2
           scp -C -o ConnectTimeout=60 -o ServerAliveInterval=60 deploy.tar.gz ec2:$DEPLOY_PATH
