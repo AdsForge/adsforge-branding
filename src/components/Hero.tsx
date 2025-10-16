@@ -63,16 +63,31 @@ export default function Hero() {
     </section>
   );
 }
-
 function Countdown() {
   const [target, setTarget] = useState<Date | null>(null);
   const [remainingMs, setRemainingMs] = useState<number>(0);
 
-  // Establish a 1-month target on mount
+  // Fetch canonical end date from server
   useEffect(() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 1);
-    setTarget(d);
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const res = await fetch("/api/countdown", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to load countdown");
+        const data = await res.json();
+        const t = new Date(data.endAt);
+        if (!cancelled) setTarget(t);
+      } catch (err) {
+        // Fallback: end immediately if server fails
+        if (!cancelled) setTarget(new Date());
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Tick every second
