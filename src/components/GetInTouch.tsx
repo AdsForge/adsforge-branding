@@ -71,7 +71,7 @@ export default function GetInTouch() {
   );
 
   return (
-    <section id="contact" className="relative">
+    <section id="contact" className="relative overflow-hidden">
       {/* Decorative glow */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -inset-[8rem] bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.18),transparent_40%)]" />
