@@ -5,7 +5,7 @@ npm -v
 
 echo 'Changing to deployment directory'
 cd /home/ubuntu/app
-echo pwd
+pwd
 
 echo 'Extracting deployment package'
 rm -rf .next
@@ -22,6 +22,6 @@ rm -rf deploy.tar.gz
 chmod +x ./node_modules/.bin/next
 
 pm2 stop all
-pm2 start npm --  start
+pm2 start pnpm --  start
 pm2 save
 echo 'Deployment completed!'
