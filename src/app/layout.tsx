@@ -14,9 +14,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AdsForge AI – Launch Meta Ads from plain English",
+  metadataBase: new URL("https://adsforge.ai"),
+  title: {
+    default: "AdsForge AI – Launch Meta Ads from plain English",
+    template: "%s | AdsForge AI",
+  },
   description:
     "Create and launch Meta Ads by describing your goals in natural language. Upload your creative, state your intent, and AdsForge AI configures the full campaign.",
+  applicationName: "AdsForge AI",
+  authors: [{ name: "AdsForge AI" }],
+  creator: "AdsForge AI",
+  publisher: "AdsForge AI",
   keywords: [
     "AdsForge AI",
     "Meta Ads",
@@ -25,17 +33,38 @@ export const metadata: Metadata = {
     "AI marketing",
     "campaign generator",
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "AdsForge AI – Launch Meta Ads from plain English",
     description:
       "Create and launch Meta Ads by describing your goals in natural language.",
     type: "website",
+    url: "https://adsforge.ai",
+    siteName: "AdsForge AI",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "AdsForge AI" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "AdsForge AI – Launch Meta Ads from plain English",
     description:
       "Create and launch Meta Ads by describing your goals in natural language.",
+    images: ["/og.png"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
