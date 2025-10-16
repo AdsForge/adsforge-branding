@@ -1,0 +1,15 @@
+datasource db {
+  provider = "sqlite" // change to "postgresql" when you move to Postgres
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Countdown {
+  id        String   @id @default("early-access") // singleton row
+  endAt     DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
