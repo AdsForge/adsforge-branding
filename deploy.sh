@@ -4,7 +4,7 @@ node -v
 npm -v
 
 echo 'Changing to deployment directory'
-cd /var/www/example
+cd /home/ubuntu/app
 
 echo 'Extracting deployment package'
 rm -rf .next
