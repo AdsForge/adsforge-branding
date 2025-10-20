@@ -1,11 +1,102 @@
 "use client";
 
 import { ReactNode, useState } from "react";
-import { motion } from "framer-motion";
-import { Settings2, Users, DollarSign, Target, FileText } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Settings2,
+  Users,
+  DollarSign,
+  Target,
+  FileText,
+  Loader2,
+} from "lucide-react";
+
+import { toast } from "sonner";
+import {
+  analyzeCampaignPrompt,
+  FacebookCampaign,
+} from "@/lib/campaignsService";
 
 export default function LiveDemo() {
   const [prompt, setPrompt] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [campaign, setCampaign] = useState<FacebookCampaign | null>(null);
+
+  const handleGenerate = async () => {
+    if (!prompt.trim()) {
+      toast.error("Please enter a campaign description");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await analyzeCampaignPrompt(prompt);
+      setCampaign(result);
+      toast.success("Campaign generated successfully!");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to generate campaign";
+      toast.error(errorMessage);
+      console.error("Campaign generation error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatAudienceTargeting = () => {
+    if (!campaign) return "Not generated yet";
+
+    const genderText =
+      campaign.genders === "ALL" ? "All genders" : campaign.genders;
+    const ageText = `${campaign.ageMin}–${campaign.ageMax}`;
+    const locationText = campaign.countries.join(", ") || "All countries";
+
+    return `${genderText}, ${ageText}, ${locationText}`;
+  };
+
+  const formatBudgetDuration = () => {
+    if (!campaign) return "Not generated yet";
+
+    const budgetType =
+      campaign.budget.budgetType === "DAILY" ? "day" : "lifetime";
+    const startDate = new Date(campaign.startTime).toLocaleDateString();
+    const endDate = new Date(campaign.endTime).toLocaleDateString();
+    const days = Math.ceil(
+      (new Date(campaign.endTime).getTime() -
+        new Date(campaign.startTime).getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
+
+    return `$${campaign.budget.value}/${budgetType} for ${days} days (${startDate} - ${endDate})`;
+  };
+
+  const formatObjective = () => {
+    if (!campaign) return "Not generated yet";
+
+    const objectiveMap: Record<string, string> = {
+      OUTCOME_ENGAGEMENT: "Engagement",
+      OUTCOME_TRAFFIC: "Traffic",
+      OUTCOME_CONVERSIONS: "Conversions",
+    };
+
+    return objectiveMap[campaign.objective] || campaign.objective;
+  };
+
+  const formatAdCopy = () => {
+    if (!campaign)
+      return (
+        prompt.trim() ||
+        '"Transform your life with MMA training. Join our elite gym today!"'
+      );
+
+    return (
+      campaign.primaryText ||
+      campaign.headline ||
+      campaign.description ||
+      "No ad copy generated"
+    );
+  };
 
   return (
     <section id="live-demo" className="relative">
@@ -26,18 +117,30 @@ export default function LiveDemo() {
             </h3>
             <div className="mt-4 space-y-4">
               <textarea
-                className="mt-1 w-full min-h-40 rounded-lg bg-white/10 px-3 py-2 text-sm outline-none ring-1 ring-inset ring-white/20 transition-colors focus:bg-white/15 focus:ring-white/40"
+                className="mt-1 w-full min-h-40 rounded-lg bg-white/10 px-3 py-2 text-sm outline-none ring-1 ring-inset ring-white/20 transition-colors focus:bg-white/15 focus:ring-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="Example: Create a Meta ad for my MMA gym targeting men aged 18–35 in Europe, budget $15/day for 2 weeks, objective is lead generation"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
+                disabled={isLoading}
               />
               <motion.button
-                className="inline-flex items-center cursor-pointer gap-2 rounded-lg bg-blue-600 text-white px-4 py-2 text-sm shadow-sm shadow-blue-600/30 hover:bg-blue-500 focus:outline-none"
-                whileHover={{ y: -1 }}
-                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center cursor-pointer gap-2 rounded-lg bg-blue-600 text-white px-4 py-2 text-sm shadow-sm shadow-blue-600/30 hover:bg-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                whileHover={!isLoading ? { y: -1 } : {}}
+                whileTap={!isLoading ? { scale: 0.98 } : {}}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                onClick={handleGenerate}
+                disabled={isLoading}
               >
-                <Settings2 className="h-4 w-4" /> Generate Campaign
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Settings2 className="h-4 w-4" /> Generate Campaign
+                  </>
+                )}
               </motion.button>
             </div>
           </div>
@@ -53,44 +156,61 @@ export default function LiveDemo() {
               AI-optimized settings ready to launch
             </p>
 
-            <motion.div
-              className="mt-4 space-y-3"
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: { opacity: 1 },
-                visible: {
-                  opacity: 1,
-                  transition: { staggerChildren: 0.08 },
-                },
-              }}
-            >
-              <PreviewCard
-                title="Audience Targeting"
-                icon={<Users className="h-4 w-4" />}
-              >
-                Men, 18–35, Europe
-              </PreviewCard>
-              <PreviewCard
-                title="Budget & Duration"
-                icon={<DollarSign className="h-4 w-4" />}
-              >
-                $15/day for 14 days
-              </PreviewCard>
-              <PreviewCard
-                title="Campaign Objective"
-                icon={<Target className="h-4 w-4" />}
-              >
-                Lead Generation
-              </PreviewCard>
-              <PreviewCard
-                title="Ad Copy"
-                icon={<FileText className="h-4 w-4" />}
-              >
-                {prompt.trim() ||
-                  '"Transform your life with MMA training. Join our elite gym today!"'}
-              </PreviewCard>
-            </motion.div>
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="mt-4 flex flex-col items-center justify-center py-12"
+                >
+                  <Loader2 className="h-12 w-12 animate-spin text-blue-400" />
+                  <p className="mt-4 text-sm opacity-70">
+                    Analyzing your campaign...
+                  </p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="content"
+                  className="mt-4 space-y-3"
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: { staggerChildren: 0.08 },
+                    },
+                  }}
+                >
+                  <PreviewCard
+                    title="Audience Targeting"
+                    icon={<Users className="h-4 w-4" />}
+                  >
+                    {formatAudienceTargeting()}
+                  </PreviewCard>
+                  <PreviewCard
+                    title="Budget & Duration"
+                    icon={<DollarSign className="h-4 w-4" />}
+                  >
+                    {formatBudgetDuration()}
+                  </PreviewCard>
+                  <PreviewCard
+                    title="Campaign Objective"
+                    icon={<Target className="h-4 w-4" />}
+                  >
+                    {formatObjective()}
+                  </PreviewCard>
+                  <PreviewCard
+                    title="Ad Copy"
+                    icon={<FileText className="h-4 w-4" />}
+                  >
+                    {formatAdCopy()}
+                  </PreviewCard>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </motion.div>
       </div>

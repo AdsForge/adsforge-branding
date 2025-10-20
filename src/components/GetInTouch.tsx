@@ -55,19 +55,49 @@ export default function GetInTouch() {
       }
       setLoading(true);
       try {
-        // TODO: Wire up your backend endpoint here.
-        await new Promise((r) => setTimeout(r, 900));
-        toast.success("Thanks! We’ll get back to you within 24 hours.");
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+        const response = await fetch(`${apiBaseUrl}contact`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: name.trim(),
+            email: email.trim(),
+            message: message.trim(),
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to send message");
+        }
+
+        toast.success("Thanks! We'll get back to you within 24 hours.", {
+          duration: 5000,
+          description: "Your message has been sent successfully.",
+        });
+
+        // Reset form
         setName("");
         setEmail("");
         setMessage("");
-      } catch {
-        toast.error("Something went wrong. Please try again.");
+        setSubmitted(false);
+        setTouched({
+          name: false,
+          email: false,
+          message: false,
+        });
+      } catch (error) {
+        console.error("Contact form error:", error);
+        toast.error("Something went wrong. Please try again.", {
+          duration: 4000,
+          description: "Unable to send your message at this time.",
+        });
       } finally {
         setLoading(false);
       }
     },
-    [errors, botField]
+    [errors, botField, name, email, message]
   );
 
   return (
