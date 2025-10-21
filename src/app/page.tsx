@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import LiveDemo from "@/components/LiveDemo";
+import JoinWaitlist from "@/components/JoinWaitlist";
 import GetInTouch from "@/components/GetInTouch";
 import Footer from "@/components/Footer";
 
@@ -34,6 +35,7 @@ export default function Home() {
         <Hero />
         <Features />
         <LiveDemo />
+        <JoinWaitlist />
         <GetInTouch />
         <Footer />
       </main>
