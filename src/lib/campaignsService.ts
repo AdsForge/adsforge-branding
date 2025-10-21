@@ -61,12 +61,56 @@ export interface FacebookCampaign {
   startTime: string;
   targetLocationType: "LOCAL" | "GLOBAL" | string;
 }
+// @TODO: Akaki: Might need to refactor this code.
+// Helper function to convert past dates to current year
+const convertDateToCurrentYear = (dateString: string): string => {
+  const date = new Date(dateString);
+  const currentYear = new Date().getFullYear();
+  const dateYear = date.getFullYear();
+
+  // If the year is in the past, update it to current year
+  if (dateYear < currentYear) {
+    date.setFullYear(currentYear);
+  }
+
+  return date.toISOString().split("T")[0];
+};
+
+// Helper function to determine objective based on campaign content
+const determineObjective = (campaign: any): string => {
+  const prompt = JSON.stringify(campaign).toLowerCase();
+
+  // Check for conversion-related keywords
+  if (
+    prompt.includes("sign up") ||
+    prompt.includes("signup") ||
+    prompt.includes("lead") ||
+    prompt.includes("conversion") ||
+    prompt.includes("register") ||
+    prompt.includes("purchase") ||
+    prompt.includes("buy")
+  ) {
+    return "OUTCOME_CONVERSIONS";
+  }
+
+  // Check for traffic-related keywords
+  if (
+    prompt.includes("traffic") ||
+    prompt.includes("visit") ||
+    prompt.includes("click")
+  ) {
+    return "OUTCOME_TRAFFIC";
+  }
+
+  // Default to conversions for most campaigns
+  return "OUTCOME_CONVERSIONS";
+};
 
 export const analyzeCampaignPrompt = async (
   aiPrompt: string
 ): Promise<FacebookCampaign> => {
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-  const res = await fetch(`https://api.adsforge.io/ai/analyze-campaign`, {
+  const res = await fetch(`https://api.adsforge.io/ai/analyze-campaign-demo`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -79,5 +123,20 @@ export const analyzeCampaignPrompt = async (
   }
 
   const data = await res.json();
+
+  // Fix missing objective
+  if (!data.objective) {
+    data.objective = determineObjective(data);
+  }
+
+  // Fix past dates
+  if (data.startTime) {
+    data.startTime = convertDateToCurrentYear(data.startTime);
+  }
+
+  if (data.endTime) {
+    data.endTime = convertDateToCurrentYear(data.endTime);
+  }
+
   return data;
 };
