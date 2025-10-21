@@ -132,14 +132,14 @@ export default function GetInTouch() {
             {/* Quick contact chips */}
             <div className="mt-5 flex flex-wrap items-center gap-2">
               <a
-                href="mailto:hello@adsforge.ai"
+                href="mailto:adsforgeio@gmail.com"
                 className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 transition"
               >
                 <Mail className="h-3.5 w-3.5 opacity-80" />
                 Email us
               </a>
               <a
-                href="https://cal.com/adsforge/intro"
+                href="https://calendly.com/adsforgeio/30min"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 transition"
