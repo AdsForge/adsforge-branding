@@ -66,7 +66,7 @@ export const analyzeCampaignPrompt = async (
   aiPrompt: string
 ): Promise<FacebookCampaign> => {
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-  const res = await fetch(`${apiBaseUrl}ai/analyze-campaign`, {
+  const res = await fetch(`https://api.adsforge.io/ai/analyze-campaign`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

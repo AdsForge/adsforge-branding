@@ -56,7 +56,7 @@ export default function GetInTouch() {
       setLoading(true);
       try {
         const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-        const response = await fetch(`${apiBaseUrl}contact`, {
+        const response = await fetch(`https://api.adsforge.io/contact`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
