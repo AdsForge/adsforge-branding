@@ -72,6 +72,7 @@ export default function JoinWaitlist() {
 
       setLoading(true);
       try {
+        // Call local API
         const response = await fetch("/api/waitlist", {
           method: "POST",
           headers: {
@@ -87,6 +88,24 @@ export default function JoinWaitlist() {
 
         if (!response.ok) {
           throw new Error(data.error || "Failed to join waitlist");
+        }
+
+        // Call external API
+        try {
+          await fetch("https://api.adsforge.io/waitlist/join", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: email.trim(),
+              fullName: name.trim() || undefined,
+            }),
+          });
+          // Note: We're not blocking on this call's success
+        } catch (externalError) {
+          console.error("External API error:", externalError);
+          // Continue even if external API fails
         }
 
         toast.success("🎉 Welcome to the waitlist!", {
