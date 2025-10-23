@@ -1,6 +1,5 @@
 "use client";
 
-import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
 
@@ -32,12 +31,12 @@ export function Navbar() {
             Contact
           </Link>
         </nav>
-        <button
-          onClick={() => toast.info("Join the waitlist – coming soon!")}
+        <Link
+          href="#waitlist"
           className="inline-flex items-center rounded-full bg-white text-black px-4 py-2 text-sm font-medium shadow hover:shadow-md transition"
         >
-          Get early access
-        </button>
+          Join the waitlist
+        </Link>
       </div>
     </header>
   );
