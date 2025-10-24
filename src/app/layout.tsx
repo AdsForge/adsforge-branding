@@ -5,6 +5,7 @@ import GoogleTagManager, {
   GoogleTagManagerNoScript,
 } from "@/components/GoogleAnalytics";
 import "./globals.css";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -87,6 +88,7 @@ export default function RootLayout({
         <GoogleTagManagerNoScript />
         {children}
         <Toaster richColors position="top-right" />
+        <GoogleAnalytics gaId="G-DTK2FDGB6E" />
       </body>
     </html>
   );
