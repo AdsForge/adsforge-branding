@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
+import GoogleTagManager, {
+  GoogleTagManagerNoScript,
+} from "@/components/GoogleAnalytics";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -76,10 +78,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark scroll-smooth">
+      <head>
+        <GoogleTagManager />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <GoogleAnalytics />
+        <GoogleTagManagerNoScript />
         {children}
         <Toaster richColors position="top-right" />
       </body>

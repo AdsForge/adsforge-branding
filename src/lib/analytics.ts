@@ -1,8 +1,9 @@
-// Google Analytics event tracking utilities
+// Google Tag Manager event tracking utilities
 
-// Extend the Window interface to include gtag
+// Extend the Window interface to include dataLayer
 declare global {
   interface Window {
+    dataLayer?: Array<Record<string, unknown>>;
     gtag?: (
       command: string,
       targetId: string,
@@ -11,18 +12,40 @@ declare global {
   }
 }
 
-// Track custom events
+// Push data to GTM dataLayer
+export function pushToDataLayer(data: Record<string, unknown>) {
+  if (typeof window !== "undefined" && window.dataLayer) {
+    window.dataLayer.push(data);
+  }
+}
+
+// Track custom events (supports both GTM dataLayer and GA gtag)
 export function trackEvent(
   eventName: string,
   eventParams?: Record<string, unknown>
 ) {
+  // Push to GTM dataLayer (preferred method)
+  pushToDataLayer({
+    event: eventName,
+    ...eventParams,
+  });
+
+  // Fallback to gtag if available (for direct GA tracking)
   if (typeof window !== "undefined" && window.gtag) {
     window.gtag("event", eventName, eventParams);
   }
 }
 
 // Track page views (useful for client-side navigation)
-export function trackPageView(url: string) {
+export function trackPageView(url: string, title?: string) {
+  // Push to GTM dataLayer
+  pushToDataLayer({
+    event: "page_view",
+    page_path: url,
+    page_title: title || document.title,
+  });
+
+  // Fallback to gtag
   if (typeof window !== "undefined" && window.gtag) {
     window.gtag("config", process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "", {
       page_path: url,
