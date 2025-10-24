@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
-import GoogleTagManager, {
-  GoogleTagManagerNoScript,
-} from "@/components/GoogleAnalytics";
 import "./globals.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
 
@@ -80,12 +77,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <head>
-        <GoogleTagManager />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <GoogleTagManagerNoScript />
         {children}
         <Toaster richColors position="top-right" />
         <GoogleAnalytics gaId="G-DTK2FDGB6E" />
