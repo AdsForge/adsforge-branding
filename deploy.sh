@@ -1,3 +1,4 @@
+#!/bin/bash
 export NVM_DIR=/home/ubuntu/.nvm
 source /home/ubuntu/.nvm/nvm.sh
 node -v
