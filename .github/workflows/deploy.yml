@@ -1,6 +1,8 @@
 name: Deploy Next.js to EC2
 
 on:
+  workflow_dispatch:
+    types: [doppler-secrets-updated]
   push:
     branches: [main]
 jobs:
