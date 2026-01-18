@@ -21,7 +21,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://adsforge.ai"),
+  metadataBase: new URL("https://adsforge.io"),
   title: {
     default: "AdsForge AI – Launch Meta Ads from plain English",
     template: "%s | AdsForge AI",
@@ -39,6 +39,9 @@ export const metadata: Metadata = {
     "ads automation",
     "AI marketing",
     "campaign generator",
+    "generative AI marketing",
+    "text to ad campaign",
+    "LLM ad tool",
   ],
   alternates: {
     canonical: "/",
@@ -48,7 +51,7 @@ export const metadata: Metadata = {
     description:
       "Create and launch Meta Ads by describing your goals in natural language.",
     type: "website",
-    url: "https://adsforge.ai",
+    url: "https://adsforge.io",
     siteName: "AdsForge AI",
     images: [{ url: "/og.png", width: 1200, height: 630, alt: "AdsForge AI" }],
   },

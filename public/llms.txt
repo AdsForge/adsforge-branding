@@ -1,0 +1,23 @@
+# AdsForge AI
+
+> Launch Meta Ads from plain English.
+
+AdsForge AI is an intelligent automation platform designed to simplify digital marketing. It allows users to create, launch, and optimize Meta Ads (Facebook & Instagram) by simply describing their goals in natural language.
+
+## Core Capabilities
+
+- **Natural Language Campaign Creation**: Users can state their intent (e.g., "I want to sell more sneakers to men in New York with a $50 daily budget"), and AdsForge configures the campaign settings, audience targeting, and budget allocation automatically.
+- **Creative Analysis & Optimization**: Upload ad creatives to receive AI-driven insights on performance potential. The system can suggest improvements or alternative copy.
+- **Automated Management**: Once launched, AdsForge monitors campaign performance and makes real-time adjustments to maximize Return on Ad Spend (ROAS).
+
+## How It Works
+
+1. **Describe**: Tell the AI your marketing objective.
+2. **Upload**: Provide your image or video assets.
+3. **Launch**: Review the generated campaign structure and publish with one click.
+
+## Resources
+
+- **Website**: [https://adsforge.io](https://adsforge.io)
+- **Documentation**: [https://adsforge.io/docs](https://adsforge.io/docs)
+- **Waitlist**: [https://adsforge.io/#waitlist](https://adsforge.io/#waitlist)

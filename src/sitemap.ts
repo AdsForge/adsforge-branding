@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://adsforge.ai";
+  const base = "https://adsforge.io";
   return [
     {
       url: `${base}/`,

@@ -10,16 +10,41 @@ export const dynamic = "force-static";
 
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "AdsForge AI",
-  url: "https://adsforge.ai",
-  description:
-    "Create and launch Meta Ads by describing your goals in natural language.",
-  potentialAction: {
-    "@type": "SearchAction",
-    target: "https://adsforge.ai/?q={search_term_string}",
-    "query-input": "required name=search_term_string",
-  },
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: "AdsForge AI",
+      url: "https://adsforge.io",
+      description:
+        "Create and launch Meta Ads by describing your goals in natural language.",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: "https://adsforge.io/?q={search_term_string}",
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: "AdsForge AI",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      description:
+        "AI-powered automation platform that configures Meta Ads campaigns from natural language descriptions.",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+        description: "Waitlist access",
+      },
+    },
+    {
+      "@type": "Organization",
+      name: "AdsForge AI",
+      url: "https://adsforge.io",
+      logo: "https://adsforge.io/logos/logo.png",
+      sameAs: ["https://x.com/adsforge_ai"],
+    },
+  ],
 };
 
 export default function Home() {

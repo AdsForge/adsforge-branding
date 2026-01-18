@@ -31,7 +31,7 @@ export default function Hero() {
           </p>
 
           {/* Countdown — placed between copy and CTAs for high salience without stealing focus */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
@@ -42,7 +42,7 @@ export default function Hero() {
               Early access closes in
             </span>
             <Countdown />
-          </motion.div>
+          </motion.div> */}
 
           <div className="mt-8 flex items-center justify-center gap-3">
             <Link
