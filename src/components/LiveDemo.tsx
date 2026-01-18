@@ -65,7 +65,7 @@ export default function LiveDemo() {
     const days = Math.ceil(
       (new Date(campaign.endTime).getTime() -
         new Date(campaign.startTime).getTime()) /
-        (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24),
     );
 
     return `$${campaign.budget.value}/${budgetType} for ${days} days (${startDate} - ${endDate})`;

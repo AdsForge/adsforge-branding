@@ -120,13 +120,13 @@ export default function JoinWaitlist() {
           error.message || "Something went wrong. Please try again.",
           {
             duration: 4000,
-          }
+          },
         );
       } finally {
         setLoading(false);
       }
     },
-    [errors, botField, name, email]
+    [errors, botField, name, email],
   );
 
   return (
@@ -360,24 +360,32 @@ export default function JoinWaitlist() {
                   <motion.button
                     type="submit"
                     disabled={disabled}
-                    className={`w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium focus:outline-none transition ${
+                    className={`group relative isolate inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg transition-transform focus:outline-none ${
                       disabled
                         ? "bg-white/10 text-white/60 cursor-not-allowed"
-                        : "bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white shadow-lg shadow-fuchsia-500/30 hover:shadow-fuchsia-500/40 hover:from-fuchsia-600 hover:to-purple-600"
+                        : "bg-gradient-to-r from-fuchsia-500 to-purple-500 shadow-fuchsia-500/30 hover:scale-[1.02] hover:shadow-fuchsia-500/40 active:scale-[0.98]" // handling scale via class for simplicity with relative
                     }`}
-                    whileHover={!disabled ? { y: -1 } : {}}
-                    whileTap={!disabled ? { scale: 0.98 } : {}}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   >
-                    {loading ? (
+                    {!disabled && (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> Joining…
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4" /> Join the waitlist
+                        {/* Brighter Gradient Overlay */}
+                        <span className="absolute inset-0 -z-10 bg-gradient-to-r from-fuchsia-400 to-purple-400 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" />
+                        {/* Border Glow */}
+                        <span className="absolute inset-0 -z-10 rounded-lg ring-1 ring-inset ring-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       </>
                     )}
+
+                    <span className="relative z-10 flex items-center gap-2">
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> Joining…
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4" /> Join the waitlist
+                        </>
+                      )}
+                    </span>
                   </motion.button>
 
                   <p className="text-center text-xs opacity-70">

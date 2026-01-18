@@ -97,7 +97,7 @@ export default function GetInTouch() {
         setLoading(false);
       }
     },
-    [errors, botField, name, email, message]
+    [errors, botField, name, email, message],
   );
 
   return (

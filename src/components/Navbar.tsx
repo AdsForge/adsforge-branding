@@ -172,9 +172,13 @@ export function Navbar() {
         </nav>
         <Link
           href="/#waitlist"
-          className="inline-flex items-center rounded-full bg-white text-black px-4 py-2 text-sm font-medium shadow hover:shadow-md transition"
+          className="group relative isolate inline-flex items-center justify-center overflow-hidden rounded-full bg-white px-4 py-2 text-sm font-medium text-black shadow transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95 hover:shadow-lg hover:shadow-cyan-500/25"
         >
-          Join the waitlist
+          {/* Gradient Overlay */}
+          <span className="absolute inset-0 -z-10 bg-gradient-to-br from-cyan-400 via-fuchsia-400 to-amber-300 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" />
+          <span className="relative z-10 transition-colors duration-300 group-hover:text-white">
+            Join the waitlist
+          </span>
         </Link>
       </div>
     </header>
