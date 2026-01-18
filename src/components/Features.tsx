@@ -68,32 +68,56 @@ export default function Features() {
             <motion.div
               key={title}
               initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+                transition: { delay: idx * 0.05, duration: 0.4 },
+              }}
               viewport={{ once: true }}
-              transition={{ delay: idx * 0.05, duration: 0.4 }}
-              whileHover={{ y: -6, scale: 1.02 }}
+              whileHover="hover"
+              variants={{
+                hover: {
+                  y: -6,
+                  scale: 1.02,
+                  transition: { duration: 0.25, ease: "easeInOut" },
+                },
+              }}
               whileTap={{ scale: 0.995 }}
-              className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-5 cursor-pointer  hover:bg-white/10 transition group transform-gpu"
+              className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-5 cursor-pointer transition-colors group transform-gpu hover:shadow-lg hover:shadow-fuchsia-500/10"
             >
-              {/* Glow */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.25),transparent_45%)] opacity-0 group-hover:opacity-10 transition duration-300"
+              {/* Gradient BG on hover - Synced via Motion */}
+              <motion.div
+                variants={{
+                  hover: { opacity: 1 },
+                }}
+                initial={{ opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-fuchsia-500/10 to-amber-500/10"
               />
-              {/* Sheen sweep */}
-              <span
+
+              {/* Border Gradient - Synced via Motion */}
+              <motion.div
+                variants={{
+                  hover: { opacity: 1 },
+                }}
+                initial={{ opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
                 aria-hidden
-                className="pointer-events-none absolute inset-y-0 left-[-60%] w-[60%] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 group-hover:translate-x-[260%] transition duration-700 ease-out skew-x-[-12deg]"
+                className="absolute inset-0 rounded-xl ring-1 ring-inset ring-fuchsia-400/20"
               />
 
               <div className="relative z-10">
                 <div className="flex items-center gap-3">
-                  <span className="rounded-lg bg-white/10 p-2 ring-1 ring-inset ring-white/20 transition-transform duration-300 group-hover:-translate-y-0.5">
+                  <div className="rounded-lg bg-white/10 p-2 text-white/80 ring-1 ring-inset ring-white/10 transition-colors duration-300 group-hover:bg-fuchsia-400/20 group-hover:text-fuchsia-200 group-hover:ring-fuchsia-400/30">
                     <Icon className="h-5 w-5" />
-                  </span>
-                  <h3 className="font-medium">{title}</h3>
+                  </div>
+                  <h3 className="font-medium text-white group-hover:text-white transition-colors">
+                    {title}
+                  </h3>
                 </div>
-                <p className="mt-3 text-sm opacity-80">{desc}</p>
+                <p className="mt-3 text-sm opacity-80 group-hover:opacity-90 transition-opacity">
+                  {desc}
+                </p>
               </div>
             </motion.div>
           ))}
