@@ -124,23 +124,31 @@ export default function LiveDemo() {
                 disabled={isLoading}
               />
               <motion.button
-                className="inline-flex items-center cursor-pointer gap-2 rounded-lg bg-blue-600 text-white px-4 py-2 text-sm shadow-sm shadow-blue-600/30 hover:bg-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                whileHover={!isLoading ? { y: -1 } : {}}
-                whileTap={!isLoading ? { scale: 0.98 } : {}}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className={`group relative isolate inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg px-4 py-2 text-sm font-medium transition-transform focus:outline-none ${
+                  isLoading
+                    ? "bg-white/10 text-white/60 cursor-not-allowed"
+                    : "bg-white text-black shadow-lg hover:scale-[1.02] active:scale-[0.98] hover:shadow-cyan-500/25"
+                }`}
                 onClick={handleGenerate}
                 disabled={isLoading}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Settings2 className="h-4 w-4" /> Generate Campaign
-                  </>
+                {!isLoading && (
+                  <span className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-br from-cyan-400 via-fuchsia-400 to-amber-300 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" />
                 )}
+                <span
+                  className={`relative z-10 flex items-center gap-2 transition-colors duration-300 ${!isLoading ? "group-hover:text-white" : ""}`}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Settings2 className="h-4 w-4" /> Generate Campaign
+                    </>
+                  )}
+                </span>
               </motion.button>
             </div>
           </div>

@@ -316,24 +316,28 @@ export default function GetInTouch() {
                 <motion.button
                   type="submit"
                   disabled={disabled}
-                  className={`md:col-span-2 justify-self-center inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm focus:outline-none transition ${
+                  className={`md:col-span-2 justify-self-center group relative isolate inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm focus:outline-none transition-transform ${
                     disabled
                       ? "bg-white/10 text-white/60 cursor-not-allowed"
-                      : "bg-blue-600 text-white shadow-sm shadow-blue-600/30 hover:bg-blue-500"
+                      : "bg-white text-black shadow-lg hover:scale-[1.02] active:scale-[0.98] hover:shadow-cyan-500/25"
                   }`}
-                  whileHover={!disabled ? { y: -1 } : {}}
-                  whileTap={!disabled ? { scale: 0.98 } : {}}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> Sending…
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" /> Send message
-                    </>
+                  {!disabled && (
+                    <span className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-br from-cyan-400 via-fuchsia-400 to-amber-300 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" />
                   )}
+                  <span
+                    className={`relative z-10 flex items-center gap-2 transition-colors duration-300 ${!disabled ? "group-hover:text-white" : ""}`}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> Sending…
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4" /> Send message
+                      </>
+                    )}
+                  </span>
                 </motion.button>
               </form>
             </div>
