@@ -1,8 +1,8 @@
+import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Roboto } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
-import { GoogleAnalytics } from "@next/third-parties/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

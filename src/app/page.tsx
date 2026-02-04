@@ -1,10 +1,10 @@
-import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
 import Features from "@/components/Features";
-import LiveDemo from "@/components/LiveDemo";
-import JoinWaitlist from "@/components/JoinWaitlist";
-import GetInTouch from "@/components/GetInTouch";
 import Footer from "@/components/Footer";
+import GetInTouch from "@/components/GetInTouch";
+import Hero from "@/components/Hero";
+import JoinWaitlist from "@/components/JoinWaitlist";
+import LiveDemo from "@/components/LiveDemo";
+import Navbar from "@/components/Navbar";
 
 export const dynamic = "force-static";
 
