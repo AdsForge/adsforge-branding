@@ -157,12 +157,12 @@ export function Navbar() {
           >
             Live demo
           </Link>
-          <Link
+          {/* <Link
             href="/docs"
             className="opacity-80 hover:opacity-100 transition"
           >
             SDK Integration
-          </Link>
+          </Link> */}
           <Link
             href="/#contact"
             className="opacity-80 hover:opacity-100 transition"
