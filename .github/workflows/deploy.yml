@@ -45,6 +45,8 @@ jobs:
           token: ${{ secrets.DOPPLER_TOKEN }}
 
       - name: Build
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: doppler run --config prd -- pnpm run build
 
       - name: Upload build artifacts
