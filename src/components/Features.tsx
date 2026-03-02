@@ -13,32 +13,32 @@ import {
 const features = [
   {
     title: "Describe intent",
-    desc: "Use natural language to express audience, budget, goals and languages.",
+    desc: "Write your campaign goal in plain English — target audience, budget, objective, and location. AdsForge AI parses your natural language description and maps it to the correct Meta Ads parameters.",
     Icon: MessageSquare,
   },
   {
     title: "AI translates to setup",
-    desc: "We generate audience targeting, placements, and optimization rules.",
+    desc: "The AI automation engine generates a complete campaign configuration: audience segmentation, placement selection, bid strategy, and budget allocation — no Ads Manager knowledge required.",
     Icon: Wand2,
   },
   {
     title: "Hit the right audience",
-    desc: "Smart segmentation and lookalikes tuned to your objective.",
+    desc: "AI-powered audience targeting uses interests, demographics, and lookalike signals tuned to your specific objective. Stop guessing which interest categories work — the platform selects them based on your intent.",
     Icon: Target,
   },
   {
     title: "Global ready",
-    desc: "Multi-language, multi-region support with sensible defaults.",
+    desc: "Run Meta Ads campaigns across multiple languages and regions with sensible defaults. Describe your target market in plain English and the platform configures the geographic and language targeting automatically.",
     Icon: Globe,
   },
   {
     title: "Fast launch",
-    desc: "From idea to campaign draft in minutes – not hours.",
+    desc: "From natural language description to a fully configured campaign draft in minutes — not hours. Review the AI-generated setup, make any adjustments, and publish directly to Meta Ads Manager with one click.",
     Icon: Rocket,
   },
   {
     title: "Safe by default",
-    desc: "Guardrails reduce policy violations and rejected ads.",
+    desc: "Built-in policy compliance guardrails analyze your campaign configuration and creative assets before launch, reducing rejected ads and policy violations that waste time and budget.",
     Icon: ShieldCheck,
   },
 ];
@@ -59,9 +59,10 @@ export default function Features() {
           </h2>
           <p className="mt-3 opacity-80 max-w-2xl mx-auto">
             Setting up Meta Ads campaigns manually takes hours of configuring
-            audiences, budgets, and placements. AdsForge AI eliminates that
-            complexity — describe your marketing intent in plain English and
-            get a fully configured, editable campaign draft in minutes.
+            audiences, budgets, and placements. AdsForge AI is an AI-powered
+            automation platform that eliminates that complexity — describe your
+            marketing intent in natural language and get a fully configured,
+            editable campaign draft in minutes.
           </p>
         </motion.div>
 

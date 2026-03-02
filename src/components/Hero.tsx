@@ -26,8 +26,10 @@ export default function Hero() {
             </span>
           </h1>
           <p className="mt-6 text-base md:text-lg max-w-2xl mx-auto opacity-80">
-            Upload your creative, describe your intent, and AdsForge AI creates
-            a complete campaign setup – audience, budget, placements and more.
+            AdsForge AI is an AI-powered automation platform that configures
+            Meta Ads campaigns from natural language descriptions. Describe your
+            audience, budget, and goal — the AI builds the full campaign setup
+            including targeting, placements, and bid strategy.
           </p>
 
           <motion.div

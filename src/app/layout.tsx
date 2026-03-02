@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     template: "%s | AdsForge AI",
   },
   description:
-    "Create and launch Meta Ads by describing your goals in natural language. Upload your creative, state your intent, and AdsForge AI configures the full campaign.",
+    "AdsForge AI is an AI-powered automation platform that configures Meta Ads campaigns from natural language descriptions. Describe your goal, upload your creative, and launch — no Ads Manager expertise required.",
   applicationName: "AdsForge AI",
   authors: [{ name: "AdsForge AI" }],
   creator: "AdsForge AI",
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AdsForge AI – Launch Meta Ads from plain English",
     description:
-      "Create and launch Meta Ads by describing your goals in natural language.",
+      "AI-powered automation platform that configures Meta Ads campaigns from natural language descriptions. No Ads Manager expertise required.",
     images: ["/og.png"],
   },
   icons: {
