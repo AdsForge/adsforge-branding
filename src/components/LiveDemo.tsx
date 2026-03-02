@@ -105,6 +105,16 @@ export default function LiveDemo() {
         <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl" />
       </div>
       <div className="mx-auto max-w-6xl px-4 py-20">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
+            Try it yourself
+          </h2>
+          <p className="mt-3 opacity-80 max-w-2xl mx-auto">
+            See AdsForge AI in action. Type a campaign description below and
+            watch the AI generate audience targeting, budget allocation, and
+            ad copy in real time — no account needed.
+          </p>
+        </div>
         <motion.div
           className="grid gap-6 lg:grid-cols-2 items-start"
           initial={{ opacity: 0, y: 12 }}

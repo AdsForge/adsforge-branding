@@ -55,11 +55,13 @@ export default function Features() {
           className="text-center"
         >
           <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
-            How AdsForge AI helps
+            Why marketers choose AdsForge AI
           </h2>
           <p className="mt-3 opacity-80 max-w-2xl mx-auto">
-            Skip the manual configuration. Describe your intent; get a full,
-            editable campaign draft.
+            Setting up Meta Ads campaigns manually takes hours of configuring
+            audiences, budgets, and placements. AdsForge AI eliminates that
+            complexity — describe your marketing intent in plain English and
+            get a fully configured, editable campaign draft in minutes.
           </p>
         </motion.div>
 

@@ -1,0 +1,70 @@
+# AdsForge AI – Complete Reference
+
+> Launch Meta Ads from plain English.
+
+AdsForge AI is an intelligent automation platform designed to simplify digital advertising. It allows users to create, launch, and optimize Meta Ads (Facebook & Instagram) by simply describing their goals in natural language — no Ads Manager expertise required.
+
+## Problem
+
+Setting up Meta Ads campaigns manually is complex and time-consuming. Marketers must navigate audience targeting, bid strategies, placement selection, budget optimization, and creative specifications. Small businesses and solo entrepreneurs often lack the knowledge or resources to run effective paid social campaigns.
+
+## Solution
+
+AdsForge AI translates plain-English marketing intent into fully configured Meta Ads campaigns. Users describe what they want to achieve, upload their creative assets, and the AI handles the rest.
+
+## Core Capabilities
+
+- **Natural Language Campaign Creation**: State your intent (e.g., "I want to sell more sneakers to men in New York with a $50 daily budget"), and AdsForge configures the campaign settings, audience targeting, and budget allocation automatically.
+- **Creative Analysis & Optimization**: Upload ad creatives to receive AI-driven insights on performance potential. The system suggests improvements and alternative copy.
+- **Automated Management**: Once launched, AdsForge monitors campaign performance and makes real-time adjustments to maximize Return on Ad Spend (ROAS).
+- **Smart Audience Segmentation**: AI-powered lookalike audiences and interest targeting tuned to your specific objective.
+- **Multi-Language & Multi-Region Support**: Run campaigns across different languages and regions with sensible defaults.
+- **Policy Compliance Guardrails**: Built-in checks to reduce policy violations and rejected ads before submission.
+
+## How It Works
+
+1. **Describe**: Tell the AI your marketing objective in natural language.
+2. **Upload**: Provide your image or video ad assets.
+3. **Launch**: Review the generated campaign structure — audience, budget, placements, optimization — and publish with one click.
+
+## Use Cases
+
+- Small business owners who want to run Facebook/Instagram ads without hiring an agency.
+- E-commerce brands looking to automate campaign creation at scale.
+- Marketing teams that want to prototype and test campaign ideas faster.
+- Freelancers managing ads for multiple clients who need to reduce setup time.
+
+## Frequently Asked Questions
+
+### What is AdsForge AI?
+AdsForge AI is an AI-powered platform that creates Meta Ads campaigns from natural language descriptions. It handles audience targeting, budget allocation, placements, and optimization automatically.
+
+### Do I need Meta Ads experience?
+No. AdsForge AI is designed for everyone — from first-time advertisers to experienced marketers looking to save time.
+
+### What platforms are supported?
+Currently Meta Ads (Facebook & Instagram). Additional platforms are planned for future releases.
+
+### How much does it cost?
+AdsForge AI is in early access. Join the waitlist for free to get priority access when the platform launches.
+
+### Is my data secure?
+Yes. AdsForge AI follows strict data handling practices. See our privacy policy at https://adsforge.io/privacy for details.
+
+## Technical Details
+
+- Built with Next.js and React
+- AI pipeline powered by large language models
+- Meta Marketing API integration for direct campaign publishing
+- Real-time performance monitoring and optimization
+
+## Resources
+
+- **Website**: [https://adsforge.io](https://adsforge.io)
+- **Documentation**: [https://adsforge.io/docs](https://adsforge.io/docs)
+- **Waitlist**: [https://adsforge.io/#waitlist](https://adsforge.io/#waitlist)
+- **Privacy Policy**: [https://adsforge.io/privacy](https://adsforge.io/privacy)
+- **Terms of Service**: [https://adsforge.io/terms](https://adsforge.io/terms)
+- **Facebook**: [https://www.facebook.com/profile.php?id=61588507254894](https://www.facebook.com/profile.php?id=61588507254894)
+- **Instagram**: [https://www.instagram.com/adsforge.ai](https://www.instagram.com/adsforge.ai)
+- **Contact**: adsforgeio@gmail.com
