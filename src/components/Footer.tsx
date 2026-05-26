@@ -28,8 +28,13 @@ export default function Footer() {
               <Link href="/blog" className="opacity-60 hover:opacity-100">
                 Blog
               </Link>
-              <Link href="#waitlist" className="opacity-60 hover:opacity-100">
-                Join waitlist
+              <Link
+                href="https://app.adsforge.io/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="opacity-60 hover:opacity-100"
+              >
+                Login
               </Link>
             </nav>
           </div>

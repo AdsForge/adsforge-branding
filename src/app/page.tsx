@@ -4,8 +4,8 @@ import Footer from "@/components/Footer";
 import GetInTouch from "@/components/GetInTouch";
 import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
-import JoinWaitlist from "@/components/JoinWaitlist";
 import LiveDemo from "@/components/LiveDemo";
+import Login from "@/components/Login";
 import Navbar from "@/components/Navbar";
 
 export const dynamic = "force-static";
@@ -36,7 +36,8 @@ const jsonLd = {
         "@type": "Offer",
         price: "0",
         priceCurrency: "USD",
-        description: "Waitlist access",
+        description: "Free account sign-up",
+        url: "https://app.adsforge.io/login",
       },
     },
     {
@@ -107,7 +108,7 @@ const jsonLd = {
           name: "Is AdsForge AI free to use?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "AdsForge AI is currently in early access. You can join the waitlist for free to get notified when the platform launches and secure priority access.",
+            text: "AdsForge AI is available now and you can sign in to start building campaigns right away. New accounts can be created directly from the login page with no credit card required. Paid plans unlock higher usage limits and advanced automation features as your campaigns scale.",
           },
         },
         {
@@ -153,7 +154,7 @@ export default function Home() {
         <Features />
         <HowItWorks />
         <LiveDemo />
-        <JoinWaitlist />
+        <Login />
         <Faq />
         <GetInTouch />
         <Footer />

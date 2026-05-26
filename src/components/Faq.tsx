@@ -19,7 +19,7 @@ const faqs = [
   },
   {
     q: "Is AdsForge AI free to use?",
-    a: "AdsForge AI is currently in early access. You can join the waitlist for free to get notified as soon as the platform launches and secure priority access with special founder pricing. There is no credit card required to sign up for the waitlist.",
+    a: "AdsForge AI is available now and you can sign in to start building campaigns right away. New accounts can be created directly from the login page — no credit card required to get started. Paid plans unlock higher usage limits and advanced automation features as your campaigns scale.",
   },
   {
     q: "What platforms does AdsForge AI support?",

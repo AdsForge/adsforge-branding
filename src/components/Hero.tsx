@@ -2,8 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Timer } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export default function Hero() {
   return (
@@ -32,35 +31,25 @@ export default function Hero() {
             including targeting, placements, and bid strategy.
           </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
-            className="mt-8 flex flex-col items-center gap-3"
-          >
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-wide">
-              <Timer className="h-3.5 w-3.5 opacity-80" />
-              Early access closes in
-            </span>
-            <Countdown />
-          </motion.div>
-
-          <div className="mt-8 flex items-center justify-center gap-3">
-            {/* Primary Button: White -> Gradient */}
-            <Link
-              href="#live-demo"
-              className="group relative isolate inline-flex items-center justify-center overflow-hidden rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black shadow transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95 hover:shadow-lg hover:shadow-cyan-500/25"
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            {/* Primary Button: Login -> Gradient */}
+            <a
+              href="https://app.adsforge.io/login"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative isolate inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black shadow transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95 hover:shadow-lg hover:shadow-cyan-500/25"
             >
               {/* Gradient Overlay */}
               <span className="absolute inset-0 -z-10 bg-gradient-to-br from-cyan-400 via-fuchsia-400 to-amber-300 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" />
-              <span className="relative z-10 transition-colors duration-300 group-hover:text-white">
-                Try live demo
+              <span className="relative z-10 flex items-center gap-2 transition-colors duration-300 group-hover:text-white">
+                Login to AdsForge AI
+                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
               </span>
-            </Link>
+            </a>
 
-            {/* Secondary Button: Glass -> Gradient Glass */}
+            {/* Secondary Button: Try live demo */}
             <Link
-              href="#features"
+              href="#live-demo"
               className="group relative isolate inline-flex items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-medium transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95 hover:shadow-lg hover:shadow-fuchsia-500/20"
             >
               {/* Gradient Background */}
@@ -69,98 +58,12 @@ export default function Hero() {
               {/* Border Glow */}
               <span className="absolute inset-0 -z-10 rounded-full ring-1 ring-inset ring-transparent transition-all duration-300 group-hover:ring-fuchsia-400/40" />
 
-              <span className="relative z-10 text-white">See how it works</span>
+              <span className="relative z-10 text-white">Try live demo</span>
             </Link>
           </div>
         </motion.div>
       </div>
     </section>
-  );
-}
-function Countdown() {
-  const [target, setTarget] = useState<Date | null>(null);
-  const [remainingMs, setRemainingMs] = useState<number>(0);
-
-  // Fetch canonical end date from server
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const res = await fetch("/api/countdown", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to load countdown");
-        const data = await res.json();
-        const t = new Date(data.endAt);
-        if (!cancelled) setTarget(t);
-      } catch (err) {
-        // Fallback: end immediately if server fails
-        if (!cancelled) setTarget(new Date());
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Tick every second
-  useEffect(() => {
-    if (!target) return;
-    const update = () => {
-      const diff = target.getTime() - Date.now();
-      setRemainingMs(Math.max(diff, 0));
-    };
-    update();
-    const id = setInterval(update, 1000);
-    return () => clearInterval(id);
-  }, [target]);
-
-  const total = remainingMs;
-  const days = Math.floor(total / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
-  const minutes = Math.floor((total / (1000 * 60)) % 60);
-  const seconds = Math.floor((total / 1000) % 60);
-
-  const ended = total <= 0;
-
-  return (
-    <div
-      role="timer"
-      aria-live="polite"
-      className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur-md"
-    >
-      {ended ? (
-        <div className="text-sm opacity-80">Offer ended</div>
-      ) : (
-        <div className="grid grid-cols-4 gap-2">
-          <TimeCell value={days} label="Days" />
-          <TimeCell value={hours} label="Hours" />
-          <TimeCell value={minutes} label="Minutes" />
-          <TimeCell value={seconds} label="Seconds" pad />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function TimeCell({
-  value,
-  label,
-  pad = false,
-}: {
-  value: number;
-  label: string;
-  pad?: boolean;
-}) {
-  const text = pad ? String(value).padStart(2, "0") : String(value);
-  return (
-    <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-      <div className="text-2xl md:text-3xl font-semibold tabular-nums tracking-tight">
-        {text}
-      </div>
-      <div className="mt-0.5 text-[10px] uppercase opacity-70">{label}</div>
-    </div>
   );
 }
 
