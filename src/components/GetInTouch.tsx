@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Check, Loader2, Mail } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { analytics } from "@/lib/analytics";
 import { EASE } from "@/lib/motion";
 import Reveal from "./Reveal";
 import { btnPrimary } from "./ui";
@@ -161,6 +162,7 @@ export default function GetInTouch() {
           throw new Error("Failed to send message");
         }
 
+        analytics.trackFormSubmit("contact");
         toast.success("Thanks! We'll get back to you within 24 hours.", {
           duration: 5000,
         });
@@ -174,6 +176,7 @@ export default function GetInTouch() {
         setTouched({ name: false, email: false, message: false });
       } catch (error) {
         console.error("Contact form error:", error);
+        analytics.trackError("contact_submit_failed", "contact_form");
         toast.error("Something went wrong. Please try again.");
       } finally {
         setLoading(false);

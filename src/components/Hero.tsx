@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { analytics } from "@/lib/analytics";
 import { EASE } from "@/lib/motion";
 import BriefLoop from "./BriefLoop";
 import { btnPrimary, btnSecondary } from "./ui";
@@ -34,14 +35,21 @@ export default function Hero() {
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <a
                 href={LOGIN_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 className={btnPrimary}
+                onClick={() =>
+                  analytics.trackButtonClick("start_for_free", "hero")
+                }
               >
                 Start for free
                 <ArrowRight className="h-4 w-4" />
               </a>
-              <Link href="#live-demo" className={btnSecondary}>
+              <Link
+                href="#live-demo"
+                className={btnSecondary}
+                onClick={() =>
+                  analytics.trackButtonClick("try_live_demo", "hero")
+                }
+              >
                 Try the live demo
               </Link>
             </div>

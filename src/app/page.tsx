@@ -19,11 +19,6 @@ const jsonLd = {
       url: "https://adsforge.io",
       description:
         "Create and launch Meta Ads by describing your goals in natural language.",
-      potentialAction: {
-        "@type": "SearchAction",
-        target: "https://adsforge.io/?q={search_term_string}",
-        "query-input": "required name=search_term_string",
-      },
     },
     {
       "@type": "SoftwareApplication",

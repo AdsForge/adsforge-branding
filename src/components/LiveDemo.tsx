@@ -1,48 +1,20 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowUpRight, Loader2 } from "lucide-react";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
+import { ArrowUpRight } from "lucide-react";
+import { useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 import {
-  analyzeCampaignPrompt,
+  CURRENCY_SYMBOLS,
+  DEMO_EXAMPLES,
+  type DemoCreative,
+  type DemoExample,
   type FacebookCampaign,
+  generateDemoCampaign,
+  SAMPLE_CAMPAIGN,
 } from "@/lib/campaignsService";
 import PhonePreview, { type AdPlatform } from "./PhonePreview";
 import Reveal from "./Reveal";
-import { btnPrimary } from "./ui";
-
-/* --------------------------- sample data --------------------------- */
-
-const SAMPLE_CAMPAIGN = {
-  name: "Weekend Sneaker Drop",
-  adName: "Atelier Sole",
-  headline: "Limited pairs. New drops every Friday.",
-  primaryText:
-    "Hand-finished sneakers released in small batches. Sizes run out fast — see this week's drop before it's gone.",
-  description: "Free shipping over $80",
-  callToAction: "SHOP_NOW",
-  objective: "OUTCOME_CONVERSIONS",
-  genders: "MALE",
-  ageMin: 21,
-  ageMax: 40,
-  countries: ["United States"],
-  interests: [
-    { name: "Sneakers" },
-    { name: "Streetwear" },
-    { name: "Online shopping" },
-  ],
-  budget: { value: 50, budgetType: "DAILY" },
-  startTime: "2026-08-03",
-  endTime: "2026-08-31",
-  facebookAdPositions: ["feed", "instagram_stream", "story", "reels"],
-} as unknown as FacebookCampaign;
-
-const EXAMPLE_PROMPTS = [
-  "Sell more sneakers to men in New York, $50 daily budget",
-  "Promote my yoga studio to women 25–45 in London, £20 a day for a month",
-  "Get leads for my MMA gym from men 18–35 in Europe, $15/day for 2 weeks",
-];
 
 /* --------------------------- formatting ---------------------------- */
 
@@ -114,12 +86,13 @@ function buildSpec(c: FacebookCampaign) {
   }
 
   if (c.budget?.value) {
+    const symbol = CURRENCY_SYMBOLS[c.currency] ?? "$";
     rows.push({
       label: "Budget",
       value:
         c.budget.budgetType === "DAILY"
-          ? `$${c.budget.value} / day`
-          : `$${c.budget.value} lifetime`,
+          ? `${symbol}${c.budget.value} / day`
+          : `${symbol}${c.budget.value} lifetime`,
     });
   }
 
@@ -152,29 +125,26 @@ function buildSpec(c: FacebookCampaign) {
 
 export default function LiveDemo() {
   const reduceMotion = useReducedMotion();
-  const [prompt, setPrompt] = useState("");
+  const [selectedId, setSelectedId] = useState<DemoCreative>(
+    DEMO_EXAMPLES[0].id,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [campaign, setCampaign] = useState<FacebookCampaign>(SAMPLE_CAMPAIGN);
   const [isSample, setIsSample] = useState(true);
   const [platform, setPlatform] = useState<AdPlatform>("facebook");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleGenerate = async () => {
-    if (!prompt.trim()) {
-      toast.error("Describe your campaign first");
-      return;
-    }
+  const selected =
+    DEMO_EXAMPLES.find((e) => e.id === selectedId) ?? DEMO_EXAMPLES[0];
+
+  const handleSelect = async (example: DemoExample) => {
+    if (isLoading) return;
+    setSelectedId(example.id);
     setIsLoading(true);
-    try {
-      const result = await analyzeCampaignPrompt(prompt);
-      setCampaign(result);
-      setIsSample(false);
-    } catch (error) {
-      console.error("Campaign generation error:", error);
-      toast.error("Couldn't generate the campaign. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    trackEvent("demo_generate", { example: example.id });
+    const result = await generateDemoCampaign(example.id);
+    setCampaign(result);
+    setIsSample(false);
+    setIsLoading(false);
   };
 
   const spec = buildSpec(campaign);
@@ -189,25 +159,28 @@ export default function LiveDemo() {
             Live demo
           </p>
           <h2 className="mt-3 max-w-xl text-balance text-3xl font-semibold tracking-tight md:text-4xl">
-            Type a brief. Watch it become an ad.
+            Pick a brief. Watch it become an ad.
           </h2>
           <p className="mt-4 max-w-2xl leading-relaxed text-muted">
-            This demo calls the real AdsForge engine — no account needed.
-            Describe a campaign and see the generated setup, previewed exactly
-            as it would appear in the Facebook and Instagram feed.
+            An interactive preview of how AdsForge works — no account needed.
+            Choose one of the sample briefs and watch a complete campaign setup
+            take shape, previewed exactly as it would appear in the Facebook and
+            Instagram feed.
           </p>
         </Reveal>
 
         <div className="mt-12 grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_auto]">
           {/* left: composer + spec sheet */}
           <Reveal delay={0.1}>
-            <div className="rounded-xl border border-edge-strong bg-surface transition-colors focus-within:border-accent/60">
-              <label
-                htmlFor="demo-prompt"
-                className="block border-b border-edge px-5 pt-4 pb-3 font-mono text-[11px] uppercase tracking-[0.25em] text-faint"
-              >
-                Campaign brief
-              </label>
+            <div className="rounded-xl border border-edge-strong bg-surface">
+              <div className="flex items-baseline justify-between border-b border-edge px-5 pt-4 pb-3">
+                <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-faint">
+                  Campaign brief
+                </p>
+                <p className="font-mono text-[11px] text-faint">
+                  {isLoading ? "analyzing…" : "ready"}
+                </p>
+              </div>
               {isLoading && (
                 <div className="relative h-px w-full overflow-hidden bg-edge">
                   {reduceMotion ? (
@@ -225,52 +198,54 @@ export default function LiveDemo() {
                   )}
                 </div>
               )}
-              <textarea
-                id="demo-prompt"
-                ref={textareaRef}
-                className="block min-h-28 w-full resize-none bg-transparent px-5 py-4 text-sm leading-relaxed outline-none placeholder:text-faint disabled:opacity-50"
-                placeholder="Describe your audience, budget, and goal in plain English…"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={(e) => {
-                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter")
-                    handleGenerate();
-                }}
-                disabled={isLoading}
-              />
-              <div className="flex flex-wrap items-center gap-2 border-t border-edge px-5 py-4">
-                <button
-                  type="button"
-                  className={btnPrimary}
-                  onClick={handleGenerate}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Generating…
-                    </>
-                  ) : (
-                    "Generate campaign"
-                  )}
-                </button>
-                <span className="text-xs text-faint">or try an example:</span>
-              </div>
-              <div className="flex flex-wrap gap-2 px-5 pb-5">
-                {EXAMPLE_PROMPTS.map((example) => (
-                  <button
-                    key={example}
-                    type="button"
-                    className="rounded-md border border-edge px-3 py-1.5 text-left text-xs text-muted transition-colors hover:border-edge-strong hover:text-foreground"
-                    onClick={() => {
-                      setPrompt(example);
-                      textareaRef.current?.focus();
-                    }}
-                    disabled={isLoading}
+              {/* the selected brief, rendered like a typed prompt */}
+              <div className="min-h-20 px-5 py-4">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.p
+                    key={selected.id}
+                    className="font-mono text-sm leading-relaxed text-foreground"
+                    initial={reduceMotion ? false : { opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    {example}
-                  </button>
-                ))}
+                    {selected.prompt}
+                    <span className="caret" aria-hidden />
+                  </motion.p>
+                </AnimatePresence>
+              </div>
+              <div className="border-t border-edge px-5 py-4">
+                <p className="text-xs text-faint">
+                  Pick a brief — the campaign generates instantly:
+                </p>
+                <div className="mt-3 flex flex-col gap-2">
+                  {DEMO_EXAMPLES.map((example, i) => {
+                    const active = example.id === selectedId && !isSample;
+                    return (
+                      <button
+                        key={example.id}
+                        type="button"
+                        aria-pressed={active}
+                        className={`flex items-baseline gap-3 rounded-md border px-3 py-2 text-left text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                          active
+                            ? "border-accent/60 text-foreground"
+                            : "border-edge text-muted hover:border-edge-strong hover:text-foreground"
+                        }`}
+                        onClick={() => handleSelect(example)}
+                        disabled={isLoading}
+                      >
+                        <span
+                          className={`font-mono text-[10px] ${
+                            active ? "text-accent" : "text-faint"
+                          }`}
+                        >
+                          0{i + 1}
+                        </span>
+                        {example.prompt}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -282,7 +257,7 @@ export default function LiveDemo() {
                 </h3>
                 {isSample ? (
                   <span className="text-xs text-faint">
-                    Example campaign — generate your own above
+                    Example campaign — pick a brief above
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-2">
@@ -358,13 +333,18 @@ export default function LiveDemo() {
                 </motion.dl>
               </AnimatePresence>
               <p className="mt-4 text-xs text-faint">
-                In the app, this setup publishes to Meta Ads Manager in one
-                click.{" "}
+                Sample output for illustration — in the app, the AI engine
+                builds your real campaign and publishes it to Meta Ads Manager
+                in one click.{" "}
                 <a
                   href="https://app.adsforge.io/login"
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-0.5 text-accent underline-offset-4 hover:underline"
+                  onClick={() =>
+                    trackEvent("cta_click", {
+                      cta: "try_with_account",
+                      location: "live_demo",
+                    })
+                  }
                 >
                   Try it with your account
                   <ArrowUpRight className="h-3 w-3" />

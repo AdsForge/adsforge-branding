@@ -11,7 +11,6 @@ import {
   Bookmark,
   Globe,
   Heart,
-  ImageIcon,
   MessageCircle,
   MoreHorizontal,
   Search,
@@ -21,6 +20,7 @@ import {
 } from "lucide-react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { FacebookCampaign } from "@/lib/campaignsService";
+import AdCreative from "./AdCreative";
 
 export type AdPlatform = "facebook" | "instagram";
 
@@ -146,23 +146,6 @@ function StatusBar() {
   );
 }
 
-function CreativePlaceholder({ className }: { className?: string }) {
-  return (
-    <div
-      className={`relative flex w-full items-center justify-center overflow-hidden bg-[#eceef1] ${className ?? ""}`}
-      style={{
-        backgroundImage:
-          "repeating-linear-gradient(-45deg, rgba(0,0,0,0.028) 0 10px, transparent 10px 20px)",
-      }}
-    >
-      <div className="flex flex-col items-center gap-1.5 text-[#8a8d91]">
-        <ImageIcon className="h-6 w-6" strokeWidth={1.5} />
-        <span className="text-[11px] font-medium">Your creative</span>
-      </div>
-    </div>
-  );
-}
-
 /* ------------------------- Facebook preview ------------------------ */
 
 function FacebookPreview({ campaign }: { campaign: FacebookCampaign }) {
@@ -213,7 +196,7 @@ function FacebookPreview({ campaign }: { campaign: FacebookCampaign }) {
           {campaign.primaryText || campaign.description}
         </motion.p>
 
-        <CreativePlaceholder className="aspect-4/3" />
+        <AdCreative kind={campaign.creative} className="aspect-4/3" />
 
         <div className="flex items-center justify-between gap-3 bg-[#f0f2f5] px-3 py-2.5">
           <div className="min-w-0">
@@ -301,7 +284,7 @@ function InstagramPreview({ campaign }: { campaign: FacebookCampaign }) {
         <MoreHorizontal className="ml-auto h-4.5 w-4.5 shrink-0" />
       </div>
 
-      <CreativePlaceholder className="aspect-square" />
+      <AdCreative kind={campaign.creative} className="aspect-square" />
 
       {/* CTA banner */}
       <div className="flex items-center justify-between bg-[#0095f6] px-3.5 py-2.5 text-[13px] font-semibold text-white">

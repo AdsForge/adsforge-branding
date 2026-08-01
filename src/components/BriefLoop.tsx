@@ -77,9 +77,10 @@ const PARSE_DELAY_MS = 350; // beat between typing done and first highlight
 const PARSE_STEP_MS = 380; // between segment highlights
 const COMPILE_INTRO_MS = 900; // spec rows staggering in
 const HOLD_MS = 2800; // rest on the compiled state
+const FADE_OUT_MS = 260; // spec fades out before the next brief types
 const CROSSFADE_S = 0.3;
 
-type Phase = "typing" | "parsing" | "compiled";
+type Phase = "typing" | "parsing" | "compiled" | "fading";
 
 function totalChars(example: Example): number {
   return example.segments.reduce((sum, seg) => sum + seg.text.length, 0);
@@ -96,7 +97,9 @@ function cycleMs(example: Example): number {
     PARSE_DELAY_MS +
     annotatedCount(example) * PARSE_STEP_MS +
     COMPILE_INTRO_MS +
-    HOLD_MS
+    HOLD_MS +
+    FADE_OUT_MS +
+    120 // goTo buffer after the fade
   );
 }
 
@@ -161,14 +164,19 @@ export default function BriefLoop() {
     const typingEndAt = START_DELAY_MS + total * TYPE_MS;
 
     later(() => {
+      // Derive progress from elapsed time rather than counting ticks:
+      // browsers throttle intervals in background/occluded tabs, and a
+      // tick-counted animation would fall behind the absolute-time
+      // phase timers below (spec appearing while the brief still types).
+      const typingStart = Date.now();
       intervalRef.current = setInterval(() => {
-        setCharCount((n) => {
-          if (n + 1 >= total && intervalRef.current !== null) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-          return Math.min(n + 1, total);
-        });
+        const elapsed = Date.now() - typingStart;
+        const n = Math.min(Math.floor(elapsed / TYPE_MS) + 1, total);
+        setCharCount(n);
+        if (n >= total && intervalRef.current !== null) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
       }, TYPE_MS);
     }, START_DELAY_MS);
 
@@ -189,7 +197,15 @@ export default function BriefLoop() {
           pendingAdvanceRef.current = true;
           return;
         }
-        goTo((exampleIndex + 1) % EXAMPLES.length);
+        // Fade the compiled spec out first so the next cycle never
+        // shows the previous answer while the new brief is typing.
+        setPhase("fading");
+        // Small buffer past the fade so the exiting snapshot AnimatePresence
+        // caches has the spec fully transparent.
+        later(
+          () => goTo((exampleIndex + 1) % EXAMPLES.length),
+          FADE_OUT_MS + 120,
+        );
       },
       compiledAt + COMPILE_INTRO_MS + HOLD_MS,
     );
@@ -298,8 +314,12 @@ export default function BriefLoop() {
             )}
           </p>
 
-          {phase === "compiled" && (
-            <div className="mt-4 border-t border-edge pt-4">
+          {(phase === "compiled" || phase === "fading") && (
+            <motion.div
+              className="mt-4 border-t border-edge pt-4"
+              animate={{ opacity: phase === "fading" ? 0 : 1 }}
+              transition={{ duration: FADE_OUT_MS / 1000, ease: EASE }}
+            >
               <dl className="space-y-2">
                 {example.compiled.map((row, i) => (
                   <motion.div
@@ -333,7 +353,7 @@ export default function BriefLoop() {
                 <Check className="h-3.5 w-3.5 text-accent" aria-hidden />
                 Ready to publish
               </motion.p>
-            </div>
+            </motion.div>
           )}
         </motion.div>
       </AnimatePresence>

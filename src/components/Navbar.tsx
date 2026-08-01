@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { analytics } from "@/lib/analytics";
 import { EASE, SPRING } from "@/lib/motion";
 import ThemeToggle from "./ThemeToggle";
 import { btnPrimary } from "./ui";
@@ -64,17 +65,11 @@ function NavLink({
   inkId: string;
   textClass: string;
 }) {
-  const [lifted, setLifted] = useState(false);
-
   return (
     <Link
       href={href}
       aria-current={ariaCurrent}
       className={`relative inline-flex items-baseline ${textClass} ${focusRing}`}
-      onMouseEnter={() => setLifted(true)}
-      onMouseLeave={() => setLifted(false)}
-      onFocus={() => setLifted(true)}
-      onBlur={() => setLifted(false)}
     >
       {index !== undefined && (
         <span
@@ -85,35 +80,12 @@ function NavLink({
           {index}
         </span>
       )}
-      <span className="block overflow-hidden">
-        {reduceMotion ? (
-          <span
-            className={`block transition-colors ${
-              lifted || active ? "text-foreground" : "text-muted"
-            }`}
-          >
-            {label}
-          </span>
-        ) : (
-          <motion.span
-            className="relative block"
-            initial={false}
-            animate={{ y: lifted ? "-100%" : "0%" }}
-            transition={{ duration: 0.3, ease: EASE }}
-          >
-            <span
-              className={`block ${active ? "text-foreground" : "text-muted"}`}
-            >
-              {label}
-            </span>
-            <span
-              aria-hidden
-              className="absolute left-0 top-full block text-foreground"
-            >
-              {label}
-            </span>
-          </motion.span>
-        )}
+      <span
+        className={`block transition-colors ${
+          active ? "text-foreground" : "text-muted hover:text-foreground"
+        }`}
+      >
+        {label}
       </span>
       {active && (
         <motion.span
@@ -320,17 +292,17 @@ export function Navbar() {
 
             <a
               href={LOGIN_URL}
-              target="_blank"
-              rel="noopener noreferrer"
               className={`text-sm text-muted transition-colors hover:text-foreground ${focusRing}`}
+              onClick={() => analytics.trackButtonClick("log_in", "header")}
             >
               Log in
             </a>
             <a
               href={LOGIN_URL}
-              target="_blank"
-              rel="noopener noreferrer"
               className={btnPrimary}
+              onClick={() =>
+                analytics.trackButtonClick("get_started", "header")
+              }
             >
               Get started
             </a>
@@ -396,9 +368,10 @@ export function Navbar() {
 
               <a
                 href={LOGIN_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 className={`rounded-md bg-accent-fill px-3 py-1.5 text-[13px] font-medium text-black transition-colors hover:bg-accent-fill-hover ${focusRing}`}
+                onClick={() =>
+                  analytics.trackButtonClick("get_started", "dock")
+                }
               >
                 Get started
               </a>
@@ -579,18 +552,20 @@ export function Navbar() {
             >
               <a
                 href={LOGIN_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  analytics.trackButtonClick("log_in", "mobile_menu");
+                  setOpen(false);
+                }}
                 className={`py-1 text-center text-sm text-muted transition-colors hover:text-foreground ${focusRing}`}
               >
                 Log in
               </a>
               <a
                 href={LOGIN_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  analytics.trackButtonClick("get_started", "mobile_menu");
+                  setOpen(false);
+                }}
                 className={`${btnPrimary} w-full`}
               >
                 Get started

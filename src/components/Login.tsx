@@ -14,24 +14,24 @@ export default function Login() {
             <span className="text-accent">.</span>
           </h2>
           <p className="mx-auto mt-5 max-w-xl leading-relaxed text-muted">
-            Sign in and turn a plain-English description into a fully configured
-            Meta Ads campaign — drafted instantly, checked against policy,
-            published in one click.
+            Create a free account and turn a plain-English description into a
+            fully configured Meta Ads campaign — drafted instantly, checked
+            against policy, published in one click.
           </p>
           <div className="mt-9">
-            <a
-              href={LOGIN_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={btnPrimary}
-            >
-              Log in to AdsForge AI
+            <a href={LOGIN_URL} className={btnPrimary}>
+              Create your free account
               <ArrowRight className="h-4 w-4" />
             </a>
           </div>
           <p className="mt-5 text-xs text-faint">
-            New here? Create an account from the login page — no credit card
-            required.
+            No credit card required · Already have an account?{" "}
+            <a
+              href={LOGIN_URL}
+              className="text-muted underline-offset-4 transition-colors hover:text-foreground hover:underline"
+            >
+              Log in
+            </a>
           </p>
         </Reveal>
       </div>

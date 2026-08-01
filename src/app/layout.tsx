@@ -1,7 +1,7 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "sonner";
+import ThemedToaster from "@/components/ThemedToaster";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -84,7 +84,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Resolve the theme before first paint to avoid a flash. */}
         <script
@@ -102,7 +102,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
-        <Toaster theme="system" position="top-right" />
+        <ThemedToaster />
         <GoogleAnalytics gaId="G-DTK2FDGB6E" />
       </body>
     </html>
