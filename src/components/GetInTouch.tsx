@@ -1,18 +1,35 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Mail,
-  MessageSquare,
-  User,
-  Send,
-  Loader2,
-  Calendar,
-  Shield,
-  Check,
-} from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowUpRight, Check, Loader2, Mail } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import Reveal from "./Reveal";
+import { btnPrimary } from "./ui";
+
+const fieldWrap = (hasError: boolean) =>
+  `mt-1.5 rounded-lg border bg-surface transition-colors ${
+    hasError
+      ? "border-red-400/60 focus-within:border-red-400"
+      : "border-edge-strong focus-within:border-accent/70"
+  }`;
+
+function FieldError({ show, message }: { show: boolean; message?: string }) {
+  return (
+    <AnimatePresence initial={false}>
+      {show && (
+        <motion.p
+          className="mt-1.5 text-xs text-red-400"
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+        >
+          {message}
+        </motion.p>
+      )}
+    </AnimatePresence>
+  );
+}
 
 export default function GetInTouch() {
   const [name, setName] = useState("");
@@ -42,8 +59,6 @@ export default function GetInTouch() {
   const showEmailError = (touched.email || submitted) && !!errors.email;
   const showMessageError = (touched.message || submitted) && !!errors.message;
 
-  const disabled = loading; // keep neutral UI before interaction; allow submit to surface errors
-
   const onSubmit = useCallback(
     async (e?: React.FormEvent) => {
       e?.preventDefault();
@@ -55,8 +70,7 @@ export default function GetInTouch() {
       }
       setLoading(true);
       try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-        const response = await fetch(`https://api.adsforge.io/contact`, {
+        const response = await fetch("https://api.adsforge.io/contact", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -74,25 +88,16 @@ export default function GetInTouch() {
 
         toast.success("Thanks! We'll get back to you within 24 hours.", {
           duration: 5000,
-          description: "Your message has been sent successfully.",
         });
 
-        // Reset form
         setName("");
         setEmail("");
         setMessage("");
         setSubmitted(false);
-        setTouched({
-          name: false,
-          email: false,
-          message: false,
-        });
+        setTouched({ name: false, email: false, message: false });
       } catch (error) {
         console.error("Contact form error:", error);
-        toast.error("Something went wrong. Please try again.", {
-          duration: 4000,
-          description: "Unable to send your message at this time.",
-        });
+        toast.error("Something went wrong. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -101,247 +106,155 @@ export default function GetInTouch() {
   );
 
   return (
-    <section id="contact" className="relative overflow-hidden">
-      {/* Decorative glow */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -inset-[8rem] bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.18),transparent_40%)]" />
-      </div>
-
-      <div className="mx-auto max-w-6xl px-4 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left column: pitch & benefits */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.5 }}
-            className="lg:col-span-5"
-          >
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
-              Let’s{" "}
-              <span className="bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-300 bg-clip-text text-transparent">
-                craft
-              </span>{" "}
-              your next winning campaign
+    <section id="contact">
+      <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+        <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-12">
+          {/* Left column */}
+          <Reveal className="lg:col-span-5">
+            <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted">
+              Contact
+            </p>
+            <h2 className="mt-3 text-balance text-3xl font-semibold tracking-tight md:text-4xl">
+              Talk to us about your next campaign
             </h2>
-            <p className="mt-3 text-sm opacity-80 max-w-md">
-              Share your goals and we’ll tailor a plan. We typically reply
+            <p className="mt-4 max-w-md leading-relaxed text-muted">
+              Share your goals and we'll tailor a plan. We typically reply
               within 24 hours.
             </p>
 
-            {/* Quick contact chips */}
-            <div className="mt-5 flex flex-wrap items-center gap-2">
+            <div className="mt-8 flex flex-col gap-3 text-sm">
               <a
                 href="mailto:adsforgeio@gmail.com"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 transition"
+                className="inline-flex w-fit items-center gap-2 text-muted transition-colors hover:text-foreground"
               >
-                <Mail className="h-3.5 w-3.5 opacity-80" />
-                Email us
+                <Mail className="h-4 w-4" />
+                adsforgeio@gmail.com
               </a>
               <a
                 href="https://calendly.com/adsforgeio/30min"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 transition"
+                className="inline-flex w-fit items-center gap-2 text-muted transition-colors hover:text-foreground"
               >
-                <Calendar className="h-3.5 w-3.5 opacity-80" />
-                Book a 15‑min intro
+                <ArrowUpRight className="h-4 w-4" />
+                Book a 30-minute intro call
               </a>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] uppercase tracking-wide">
-                <Shield className="h-3.5 w-3.5 opacity-80" />
-                We’ll never share your data
-              </span>
             </div>
 
-            {/* Benefits list */}
-            <ul className="mt-6 space-y-2 text-sm opacity-90">
-              <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 text-cyan-400" />
+            <ul className="mt-8 space-y-2.5 text-sm text-muted">
+              <li className="flex items-start gap-2.5">
+                <Check className="mt-0.5 h-4 w-4 text-accent" />
                 Clear recommendations tailored to your objectives
               </li>
-              <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 text-fuchsia-400" />
+              <li className="flex items-start gap-2.5">
+                <Check className="mt-0.5 h-4 w-4 text-accent" />
                 Fast response — usually under 24 hours
               </li>
-              <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 text-amber-300" />
-                No spam, no sharing, ever
+              <li className="flex items-start gap-2.5">
+                <Check className="mt-0.5 h-4 w-4 text-accent" />
+                No spam, no sharing your data, ever
               </li>
             </ul>
-          </motion.div>
+          </Reveal>
 
-          {/* Right column: form card */}
-          <motion.div
-            className="lg:col-span-7 rounded-3xl p-[1px] bg-gradient-to-br from-white/20 via-white/5 to-transparent"
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8 backdrop-blur-sm">
-              <form
-                className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                onSubmit={onSubmit}
-              >
-                {/* Honeypot */}
-                <input
-                  type="text"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  value={botField}
-                  onChange={(e) => setBotField(e.target.value)}
-                  className="hidden"
-                  aria-hidden
-                />
+          {/* Right column: form */}
+          <Reveal delay={0.1} className="lg:col-span-7">
+            <form
+              className="grid grid-cols-1 gap-5 md:grid-cols-2"
+              onSubmit={onSubmit}
+            >
+              {/* Honeypot */}
+              <input
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={botField}
+                onChange={(e) => setBotField(e.target.value)}
+                className="hidden"
+                aria-hidden
+              />
 
-                <label className="col-span-1">
-                  <span className="text-xs opacity-80">Your name</span>
-                  <div
-                    className={`mt-1 flex items-center gap-2 rounded-lg bg-white/10 ring-1 ring-inset px-3 ${
-                      showNameError
-                        ? "ring-red-400/50 focus-within:ring-red-400"
-                        : "ring-white/20 focus-within:ring-white/40"
-                    }`}
-                  >
-                    <User className="h-4 w-4 opacity-70" />
-                    <input
-                      className="w-full bg-transparent py-2 text-sm outline-none"
-                      placeholder="Jane Doe"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      onBlur={() => setTouched((t) => ({ ...t, name: true }))}
-                      aria-invalid={showNameError}
-                    />
-                  </div>
-                  <AnimatePresence initial={false}>
-                    {showNameError && (
-                      <motion.p
-                        className="mt-1 text-xs text-red-300"
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                      >
-                        {errors.name}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
-                </label>
+              <label className="col-span-1">
+                <span className="text-xs text-muted">Your name</span>
+                <div className={fieldWrap(showNameError)}>
+                  <input
+                    className="w-full bg-transparent px-3.5 py-2.5 text-sm outline-none placeholder:text-faint"
+                    placeholder="Jane Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onBlur={() => setTouched((t) => ({ ...t, name: true }))}
+                    aria-invalid={showNameError}
+                  />
+                </div>
+                <FieldError show={showNameError} message={errors.name} />
+              </label>
 
-                <label className="col-span-1">
-                  <span className="text-xs opacity-80">Email</span>
-                  <div
-                    className={`mt-1 flex items-center gap-2 rounded-lg bg-white/10 ring-1 ring-inset px-3 ${
-                      showEmailError
-                        ? "ring-red-400/50 focus-within:ring-red-400"
-                        : "ring-white/20 focus-within:ring-white/40"
-                    }`}
-                  >
-                    <Mail className="h-4 w-4 opacity-70" />
-                    <input
-                      type="email"
-                      className="w-full bg-transparent py-2 text-sm outline-none"
-                      placeholder="you@company.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                      aria-invalid={showEmailError}
-                    />
-                  </div>
-                  <AnimatePresence initial={false}>
-                    {showEmailError && (
-                      <motion.p
-                        className="mt-1 text-xs text-red-300"
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                      >
-                        {errors.email}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
-                </label>
+              <label className="col-span-1">
+                <span className="text-xs text-muted">Email</span>
+                <div className={fieldWrap(showEmailError)}>
+                  <input
+                    type="email"
+                    className="w-full bg-transparent px-3.5 py-2.5 text-sm outline-none placeholder:text-faint"
+                    placeholder="you@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                    aria-invalid={showEmailError}
+                  />
+                </div>
+                <FieldError show={showEmailError} message={errors.email} />
+              </label>
 
-                <label className="md:col-span-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs opacity-80">Message</span>
-                    <span className="text-[10px] opacity-70">
-                      {message.length}/{maxLen}
-                    </span>
-                  </div>
-                  <div
-                    className={`mt-1 flex items-start gap-2 rounded-lg bg-white/10 ring-1 ring-inset px-3 ${
-                      showMessageError
-                        ? "ring-red-400/50 focus-within:ring-red-400"
-                        : "ring-white/20 focus-within:ring-white/40"
-                    }`}
-                  >
-                    <MessageSquare className="mt-2 h-4 w-4 opacity-70" />
-                    <textarea
-                      className="w-full bg-transparent py-2 text-sm outline-none min-h-28 resize-vertical"
-                      placeholder="Tell us about your goals, timelines, and any constraints…"
-                      value={message}
-                      onChange={(e) =>
-                        setMessage(e.target.value.slice(0, maxLen))
-                      }
-                      onKeyDown={(e) => {
-                        if ((e.metaKey || e.ctrlKey) && e.key === "Enter")
-                          onSubmit();
-                      }}
-                      onBlur={() =>
-                        setTouched((t) => ({ ...t, message: true }))
-                      }
-                      aria-invalid={showMessageError}
-                    />
-                  </div>
-                  <AnimatePresence initial={false}>
-                    {showMessageError && (
-                      <motion.p
-                        className="mt-1 text-xs text-red-300"
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                      >
-                        {errors.message}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
-                  <p className="mt-2 text-[10px] opacity-70">
-                    Tip: Press <kbd className="rounded bg-white/10 px-1">⌘</kbd>
-                    /<kbd className="rounded bg-white/10 px-1">Ctrl</kbd> +{" "}
-                    <kbd className="rounded bg-white/10 px-1">Enter</kbd> to
-                    send
-                  </p>
-                </label>
-
-                <motion.button
-                  type="submit"
-                  disabled={disabled}
-                  className={`md:col-span-2 justify-self-center group relative isolate inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm focus:outline-none transition-transform ${
-                    disabled
-                      ? "bg-white/10 text-white/60 cursor-not-allowed"
-                      : "bg-white text-black shadow-lg hover:scale-[1.02] active:scale-[0.98] hover:shadow-cyan-500/25"
-                  }`}
-                >
-                  {!disabled && (
-                    <span className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-br from-cyan-400 via-fuchsia-400 to-amber-300 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" />
-                  )}
-                  <span
-                    className={`relative z-10 flex items-center gap-2 transition-colors duration-300 ${!disabled ? "group-hover:text-white" : ""}`}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> Sending…
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4" /> Send message
-                      </>
-                    )}
+              <label className="md:col-span-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted">Message</span>
+                  <span className="text-[11px] text-faint">
+                    {message.length}/{maxLen}
                   </span>
-                </motion.button>
-              </form>
-            </div>
-          </motion.div>
+                </div>
+                <div className={fieldWrap(showMessageError)}>
+                  <textarea
+                    className="min-h-32 w-full resize-y bg-transparent px-3.5 py-2.5 text-sm outline-none placeholder:text-faint"
+                    placeholder="Tell us about your goals, timelines, and any constraints…"
+                    value={message}
+                    onChange={(e) =>
+                      setMessage(e.target.value.slice(0, maxLen))
+                    }
+                    onKeyDown={(e) => {
+                      if ((e.metaKey || e.ctrlKey) && e.key === "Enter")
+                        onSubmit();
+                    }}
+                    onBlur={() => setTouched((t) => ({ ...t, message: true }))}
+                    aria-invalid={showMessageError}
+                  />
+                </div>
+                <FieldError show={showMessageError} message={errors.message} />
+              </label>
+
+              <div className="flex items-center justify-between gap-4 md:col-span-2">
+                <p className="text-[11px] text-faint">
+                  Press{" "}
+                  <kbd className="rounded border border-edge px-1 font-mono">
+                    ⌘
+                  </kbd>
+                  <span className="mx-0.5">+</span>
+                  <kbd className="rounded border border-edge px-1 font-mono">
+                    Enter
+                  </kbd>{" "}
+                  to send
+                </p>
+                <button type="submit" disabled={loading} className={btnPrimary}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Sending…
+                    </>
+                  ) : (
+                    "Send message"
+                  )}
+                </button>
+              </div>
+            </form>
+          </Reveal>
         </div>
       </div>
     </section>

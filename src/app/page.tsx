@@ -151,9 +151,9 @@ export default function Home() {
       <main>
         <Navbar />
         <Hero />
-        <Features />
-        <HowItWorks />
         <LiveDemo />
+        <HowItWorks />
+        <Features />
         <Login />
         <Faq />
         <GetInTouch />

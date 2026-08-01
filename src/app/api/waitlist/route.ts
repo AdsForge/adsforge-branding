@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     if (!sanitizedEmail || !/^\S+@\S+\.\S+$/.test(sanitizedEmail)) {
       return NextResponse.json(
         { error: "Please enter a valid email address" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     if (existing) {
       return NextResponse.json(
         { error: "This email is already on the waitlist!" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -42,13 +42,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { success: true, message: "Successfully joined the waitlist!" },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Waitlist error:", error);
     return NextResponse.json(
       { error: "Something went wrong. Please try again." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -58,7 +58,7 @@ export async function GET() {
     const count = await prisma.waitlist.count();
     return NextResponse.json(
       { count },
-      { headers: { "Cache-Control": "no-store" } }
+      { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
     console.error("Waitlist count error:", error);

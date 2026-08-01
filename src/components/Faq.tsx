@@ -1,8 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { ChevronDown } from "lucide-react"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import Reveal from "./Reveal";
 
 const faqs = [
   {
@@ -33,76 +34,68 @@ const faqs = [
     q: "Is my data secure with AdsForge AI?",
     a: "Yes. AdsForge AI follows strict data handling practices and never shares your information with third parties. Your campaign data and creative assets are processed securely and are only used to generate your campaigns. You can review our full privacy policy for detailed information on how we protect your data.",
   },
-]
+];
 
 export default function Faq() {
-  const [openIdx, setOpenIdx] = useState<number | null>(null)
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const reduceMotion = useReducedMotion();
 
   return (
-    <section id="faq" className="relative">
-      <div className="mx-auto max-w-3xl px-4 py-20">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.6 }}
-          className="text-center"
-        >
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
+    <section id="faq" className="border-b border-edge">
+      <div className="mx-auto max-w-3xl px-4 py-20 md:py-28">
+        <Reveal>
+          <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted">
+            FAQ
+          </p>
+          <h2 className="mt-3 text-balance text-3xl font-semibold tracking-tight md:text-4xl">
             Frequently asked questions
           </h2>
-          <p className="mt-3 opacity-80 max-w-xl mx-auto">
-            Everything you need to know about AdsForge AI and how it can help
-            you launch better Meta Ads campaigns faster.
-          </p>
-        </motion.div>
+        </Reveal>
 
-        <div className="mt-12 space-y-3">
-          {faqs.map(({ q, a }, idx) => {
-            const isOpen = openIdx === idx
-
-            return (
-              <motion.div
-                key={q}
-                initial={{ opacity: 0, y: 8 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.04, duration: 0.4 }}
-                className="rounded-xl border border-white/10 bg-white/5 transition-colors hover:border-white/20"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenIdx(isOpen ? null : idx)}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
-                  aria-expanded={isOpen}
-                >
-                  <span className="text-sm font-medium">{q}</span>
-                  <ChevronDown
-                    className={`h-4 w-4 shrink-0 opacity-60 transition-transform duration-200 ${
-                      isOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: "easeInOut" }}
-                      className="overflow-hidden"
-                    >
-                      <p className="px-5 pb-4 text-sm opacity-70 leading-relaxed">
-                        {a}
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            )
-          })}
-        </div>
+        <Reveal delay={0.1}>
+          <div className="mt-12 border-t border-edge">
+            {faqs.map(({ q, a }, idx) => {
+              const isOpen = openIdx === idx;
+              return (
+                <div key={q} className="border-b border-edge">
+                  <button
+                    type="button"
+                    onClick={() => setOpenIdx(isOpen ? null : idx)}
+                    className="flex w-full items-center justify-between gap-6 py-5 text-left"
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-panel-${idx}`}
+                  >
+                    <span className="text-[15px] font-medium">{q}</span>
+                    <Plus
+                      className={`h-4 w-4 shrink-0 text-faint transition-transform duration-200 ${
+                        isOpen ? "rotate-45" : ""
+                      }`}
+                    />
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.section
+                        id={`faq-panel-${idx}`}
+                        initial={
+                          reduceMotion ? false : { height: 0, opacity: 0 }
+                        }
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <p className="pr-10 pb-5 text-sm leading-relaxed text-muted">
+                          {a}
+                        </p>
+                      </motion.section>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+        </Reveal>
       </div>
     </section>
-  )
+  );
 }

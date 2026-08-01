@@ -1,11 +1,11 @@
-import Footer from "@/components/Footer"
-import Navbar from "@/components/Navbar"
-import Link from "next/link"
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
+import Link from "next/link";
 
 export const metadata = {
   title: "404 – Page Not Found",
   description: "The page you are looking for does not exist.",
-}
+};
 
 export default function NotFound() {
   return (
@@ -55,7 +55,7 @@ export default function NotFound() {
       </section>
       <Footer />
     </main>
-  )
+  );
 }
 
 function BackgroundDecor() {
@@ -68,5 +68,5 @@ function BackgroundDecor() {
         </div>
       </div>
     </div>
-  )
+  );
 }

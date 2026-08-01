@@ -4,7 +4,7 @@ import { getAllPosts } from "@/lib/blog";
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://adsforge.io";
 
-  const blogEntries = getAllPosts().map(post => ({
+  const blogEntries = getAllPosts().map((post) => ({
     url: `${base}/blog/${post.slug}`,
     lastModified: new Date(post.date),
     changeFrequency: "monthly" as const,
