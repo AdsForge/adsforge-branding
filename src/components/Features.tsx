@@ -1,45 +1,91 @@
+"use client";
+
+import { motion, useInView } from "framer-motion";
+import { type ComponentType, useEffect, useRef, useState } from "react";
 import {
-  Globe,
-  MessageSquare,
-  Rocket,
-  ShieldCheck,
-  Target,
-  Wand2,
-} from "lucide-react";
+  AudienceVignette,
+  BuildSetupVignette,
+  DescribeIntentVignette,
+  FastLaunchVignette,
+  GlobalVignette,
+  SafeVignette,
+} from "./FeatureVignettes";
 import Reveal from "./Reveal";
 
 const features = [
   {
     title: "Describe intent",
     desc: "Write your goal in plain English — audience, budget, objective, location. AdsForge AI maps it to the correct Meta Ads parameters.",
-    Icon: MessageSquare,
+    Vignette: DescribeIntentVignette,
   },
   {
     title: "AI builds the setup",
     desc: "A complete configuration is generated for you: audience segmentation, placements, bid strategy, and budget allocation.",
-    Icon: Wand2,
+    Vignette: BuildSetupVignette,
   },
   {
     title: "Hit the right audience",
     desc: "Interest, demographic, and lookalike signals are tuned to your objective — no more guessing which categories work.",
-    Icon: Target,
+    Vignette: AudienceVignette,
   },
   {
     title: "Global ready",
     desc: "Run campaigns across languages and regions with sensible defaults. Geographic and language targeting is configured automatically.",
-    Icon: Globe,
+    Vignette: GlobalVignette,
   },
   {
     title: "Fast launch",
     desc: "Go from a description to an editable campaign draft in minutes, then publish directly to Meta Ads Manager with one click.",
-    Icon: Rocket,
+    Vignette: FastLaunchVignette,
   },
   {
     title: "Safe by default",
     desc: "Built-in policy checks analyze your setup and creative before launch, reducing rejected ads and wasted budget.",
-    Icon: ShieldCheck,
+    Vignette: SafeVignette,
   },
 ];
+
+/*
+  A cell plays its vignette once when it first scrolls into view
+  (a short pulse gives the vignette a rising edge), and replays it
+  whenever the pointer enters.
+*/
+function FeatureCell({
+  title,
+  desc,
+  Vignette,
+}: {
+  title: string;
+  desc: string;
+  Vignette: ComponentType<{ active: boolean }>;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-64px" });
+  const [hovered, setHovered] = useState(false);
+  const [pulse, setPulse] = useState(false);
+
+  useEffect(() => {
+    if (!inView) return;
+    setPulse(true);
+    const id = setTimeout(() => setPulse(false), 200);
+    return () => clearTimeout(id);
+  }, [inView]);
+
+  return (
+    <motion.div
+      ref={ref}
+      className="border-r border-b border-edge p-6 transition-colors hover:bg-white/2 md:p-8"
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+    >
+      <div className="mb-5 flex h-16 items-end">
+        <Vignette active={hovered || pulse} />
+      </div>
+      <h3 className="font-medium">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-muted">{desc}</p>
+    </motion.div>
+  );
+}
 
 export default function Features() {
   return (
@@ -61,20 +107,13 @@ export default function Features() {
 
         <Reveal delay={0.1}>
           <div className="mt-14 grid border-t border-l border-edge sm:grid-cols-2 lg:grid-cols-3">
-            {features.map(({ title, desc, Icon }) => (
-              <div
+            {features.map(({ title, desc, Vignette }) => (
+              <FeatureCell
                 key={title}
-                className="group border-r border-b border-edge p-6 transition-colors hover:bg-white/2 md:p-8"
-              >
-                <Icon
-                  className="h-5 w-5 text-faint transition-colors duration-300 group-hover:text-accent"
-                  strokeWidth={1.75}
-                />
-                <h3 className="mt-5 font-medium">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
-                  {desc}
-                </p>
-              </div>
+                title={title}
+                desc={desc}
+                Vignette={Vignette}
+              />
             ))}
           </div>
         </Reveal>

@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   analyzeCampaignPrompt,
@@ -157,6 +157,7 @@ export default function LiveDemo() {
   const [campaign, setCampaign] = useState<FacebookCampaign>(SAMPLE_CAMPAIGN);
   const [isSample, setIsSample] = useState(true);
   const [platform, setPlatform] = useState<AdPlatform>("facebook");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -200,15 +201,33 @@ export default function LiveDemo() {
         <div className="mt-12 grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_auto]">
           {/* left: composer + spec sheet */}
           <Reveal delay={0.1}>
-            <div className="rounded-xl border border-edge-strong bg-surface">
+            <div className="rounded-xl border border-edge-strong bg-surface transition-colors focus-within:border-accent/60">
               <label
                 htmlFor="demo-prompt"
                 className="block border-b border-edge px-5 pt-4 pb-3 font-mono text-[11px] uppercase tracking-[0.25em] text-faint"
               >
                 Campaign brief
               </label>
+              {isLoading && (
+                <div className="relative h-px w-full overflow-hidden bg-edge">
+                  {reduceMotion ? (
+                    <div className="absolute inset-0 bg-accent" />
+                  ) : (
+                    <motion.div
+                      className="absolute inset-y-0 left-0 h-px w-1/3 bg-accent"
+                      animate={{ x: ["-100%", "400%"] }}
+                      transition={{
+                        duration: 1.1,
+                        ease: "linear",
+                        repeat: Infinity,
+                      }}
+                    />
+                  )}
+                </div>
+              )}
               <textarea
                 id="demo-prompt"
+                ref={textareaRef}
                 className="block min-h-28 w-full resize-none bg-transparent px-5 py-4 text-sm leading-relaxed outline-none placeholder:text-faint disabled:opacity-50"
                 placeholder="Describe your audience, budget, and goal in plain English…"
                 value={prompt}
@@ -243,7 +262,10 @@ export default function LiveDemo() {
                     key={example}
                     type="button"
                     className="rounded-md border border-edge px-3 py-1.5 text-left text-xs text-muted transition-colors hover:border-edge-strong hover:text-foreground"
-                    onClick={() => setPrompt(example)}
+                    onClick={() => {
+                      setPrompt(example);
+                      textareaRef.current?.focus();
+                    }}
                     disabled={isLoading}
                   >
                     {example}
@@ -258,9 +280,30 @@ export default function LiveDemo() {
                 <h3 className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted">
                   Generated setup
                 </h3>
-                {isSample && (
+                {isSample ? (
                   <span className="text-xs text-faint">
                     Example campaign — generate your own above
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className="relative flex h-1.5 w-1.5"
+                      aria-hidden="true"
+                    >
+                      {!reduceMotion && (
+                        <motion.span
+                          key={`${campaign.name}-${campaign.headline}`}
+                          className="absolute inset-0 rounded-full bg-accent"
+                          initial={{ scale: 1, opacity: 0.7 }}
+                          animate={{ scale: 2.6, opacity: 0 }}
+                          transition={{ duration: 1.2, ease: "easeOut" }}
+                        />
+                      )}
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                    </span>
+                    <span className="font-mono text-[11px] text-muted">
+                      Generated just now
+                    </span>
                   </span>
                 )}
               </div>
@@ -274,7 +317,7 @@ export default function LiveDemo() {
                     hidden: { opacity: 0 },
                     visible: {
                       opacity: 1,
-                      transition: { staggerChildren: 0.05 },
+                      transition: { staggerChildren: 0.09 },
                     },
                   }}
                 >
@@ -283,7 +326,7 @@ export default function LiveDemo() {
                       key={label}
                       className="grid grid-cols-[7rem_1fr] gap-4 border-b border-edge py-3 sm:grid-cols-[9rem_1fr]"
                       variants={{
-                        hidden: { opacity: 0, y: 6 },
+                        hidden: { opacity: 0, y: 8 },
                         visible: { opacity: 1, y: 0 },
                       }}
                     >
@@ -295,7 +338,7 @@ export default function LiveDemo() {
                     <motion.div
                       className="grid grid-cols-[7rem_1fr] gap-4 border-b border-edge py-3 sm:grid-cols-[9rem_1fr]"
                       variants={{
-                        hidden: { opacity: 0, y: 6 },
+                        hidden: { opacity: 0, y: 8 },
                         visible: { opacity: 1, y: 0 },
                       }}
                     >

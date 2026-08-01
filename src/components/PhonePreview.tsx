@@ -1,6 +1,12 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+} from "framer-motion";
 import {
   Bookmark,
   Globe,
@@ -13,6 +19,7 @@ import {
   Share2,
   ThumbsUp,
 } from "lucide-react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import type { FacebookCampaign } from "@/lib/campaignsService";
 
 export type AdPlatform = "facebook" | "instagram";
@@ -159,6 +166,7 @@ function CreativePlaceholder({ className }: { className?: string }) {
 /* ------------------------- Facebook preview ------------------------ */
 
 function FacebookPreview({ campaign }: { campaign: FacebookCampaign }) {
+  const reduceMotion = useReducedMotion();
   const brand = brandName(campaign);
   const domain = `${brandHandle(campaign)}.com`;
 
@@ -196,9 +204,14 @@ function FacebookPreview({ campaign }: { campaign: FacebookCampaign }) {
           <MoreHorizontal className="ml-auto h-4.5 w-4.5 shrink-0 text-[#65676b]" />
         </div>
 
-        <p className="px-3 pt-2 pb-2.5 text-[13px] leading-snug">
+        <motion.p
+          className="px-3 pt-2 pb-2.5 text-[13px] leading-snug"
+          initial={reduceMotion ? false : { opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: 0.05 }}
+        >
           {campaign.primaryText || campaign.description}
-        </p>
+        </motion.p>
 
         <CreativePlaceholder className="aspect-4/3" />
 
@@ -207,9 +220,14 @@ function FacebookPreview({ campaign }: { campaign: FacebookCampaign }) {
             <div className="truncate text-[10px] uppercase tracking-wide text-[#65676b]">
               {domain}
             </div>
-            <div className="truncate text-[13px] font-semibold leading-tight">
+            <motion.div
+              className="truncate text-[13px] font-semibold leading-tight"
+              initial={reduceMotion ? false : { opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, delay: 0.1 }}
+            >
               {campaign.headline}
-            </div>
+            </motion.div>
             {campaign.description && (
               <div className="truncate text-[11px] text-[#65676b]">
                 {campaign.description}
@@ -252,6 +270,7 @@ function FacebookPreview({ campaign }: { campaign: FacebookCampaign }) {
 /* ------------------------ Instagram preview ------------------------ */
 
 function InstagramPreview({ campaign }: { campaign: FacebookCampaign }) {
+  const reduceMotion = useReducedMotion();
   const handle = brandHandle(campaign);
   const brand = brandName(campaign);
 
@@ -317,10 +336,15 @@ function InstagramPreview({ campaign }: { campaign: FacebookCampaign }) {
       </div>
 
       <div className="px-3 text-[13px] font-semibold">1,248 likes</div>
-      <p className="line-clamp-2 px-3 pt-1 pb-3 text-[12.5px] leading-snug">
+      <motion.p
+        className="line-clamp-2 px-3 pt-1 pb-3 text-[12.5px] leading-snug"
+        initial={reduceMotion ? false : { opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: 0.05 }}
+      >
         <span className="font-semibold">{handle}</span>{" "}
         {campaign.primaryText || campaign.headline}
-      </p>
+      </motion.p>
     </div>
   );
 }
@@ -338,49 +362,78 @@ export default function PhonePreview({
 }) {
   const reduceMotion = useReducedMotion();
 
+  const rotateX = useMotionValue(0);
+  const rotateY = useMotionValue(0);
+  const springRotateX = useSpring(rotateX, { stiffness: 150, damping: 20 });
+  const springRotateY = useSpring(rotateY, { stiffness: 150, damping: 20 });
+
+  const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (reduceMotion || e.pointerType !== "mouse") return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 … 0.5
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    rotateY.set(px * 10); // ±5deg
+    rotateX.set(py * -10); // ∓5deg
+  };
+
+  const handlePointerLeave = () => {
+    rotateX.set(0);
+    rotateY.set(0);
+  };
+
   return (
     <div
-      className="relative w-[300px] rounded-[2.75rem] border border-edge-strong bg-[#0d0d0c] p-2.5 shadow-[0_32px_90px_-28px_rgba(0,0,0,0.9)] transition-opacity duration-300"
-      style={{ opacity: dimmed ? 0.5 : 1 }}
+      style={{ perspective: 1000 }}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
     >
-      <div
-        className="relative flex h-[590px] flex-col overflow-hidden rounded-[2.1rem] bg-white"
-        style={{ fontFamily: nativeFont }}
+      <motion.div
+        className="relative w-[300px] rounded-[2.75rem] border border-edge-strong bg-[#0d0d0c] p-2.5 shadow-[0_32px_90px_-28px_rgba(0,0,0,0.9)] transition-opacity duration-300"
+        style={{
+          rotateX: springRotateX,
+          rotateY: springRotateY,
+          opacity: dimmed ? 0.5 : 1,
+        }}
       >
-        {/* dynamic island */}
-        <div className="absolute left-1/2 top-2 z-20 h-[22px] w-[78px] -translate-x-1/2 rounded-full bg-black" />
-        <StatusBar />
+        <div
+          className="relative flex h-[590px] flex-col overflow-hidden rounded-[2.1rem] bg-white"
+          style={{ fontFamily: nativeFont }}
+        >
+          {/* dynamic island */}
+          <div className="absolute left-1/2 top-2 z-20 h-[22px] w-[78px] -translate-x-1/2 rounded-full bg-black" />
+          <StatusBar />
 
-        <div className="relative flex-1 overflow-hidden">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={`${platform}-${campaign.headline}-${campaign.name}`}
-              className="absolute inset-0"
-              initial={
-                reduceMotion
-                  ? false
-                  : { opacity: 0, x: platform === "facebook" ? -14 : 14 }
-              }
-              animate={{ opacity: 1, x: 0 }}
-              exit={
-                reduceMotion
-                  ? undefined
-                  : { opacity: 0, x: platform === "facebook" ? 14 : -14 }
-              }
-              transition={{ duration: 0.22, ease: "easeOut" }}
-            >
-              {platform === "facebook" ? (
-                <FacebookPreview campaign={campaign} />
-              ) : (
-                <InstagramPreview campaign={campaign} />
-              )}
-            </motion.div>
-          </AnimatePresence>
+          <div className="relative flex-1 overflow-hidden">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={`${platform}-${campaign.headline}-${campaign.name}`}
+                className="absolute inset-0"
+                initial={
+                  reduceMotion
+                    ? false
+                    : { opacity: 0, x: platform === "facebook" ? -14 : 14 }
+                }
+                animate={{ opacity: 1, x: 0 }}
+                exit={
+                  reduceMotion
+                    ? undefined
+                    : { opacity: 0, x: platform === "facebook" ? 14 : -14 }
+                }
+                transition={{ duration: 0.22, ease: "easeOut" }}
+              >
+                {platform === "facebook" ? (
+                  <FacebookPreview campaign={campaign} />
+                ) : (
+                  <InstagramPreview campaign={campaign} />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* home indicator */}
+          <div className="pointer-events-none absolute bottom-1.5 left-1/2 z-20 h-1 w-28 -translate-x-1/2 rounded-full bg-black/25" />
         </div>
-
-        {/* home indicator */}
-        <div className="pointer-events-none absolute bottom-1.5 left-1/2 z-20 h-1 w-28 -translate-x-1/2 rounded-full bg-black/25" />
-      </div>
+      </motion.div>
     </div>
   );
 }
