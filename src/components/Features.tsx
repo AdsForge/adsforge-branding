@@ -1,130 +1,122 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+import { type ComponentType, useEffect, useRef, useState } from "react";
 import {
-  Globe,
-  Target,
-  MessageSquare,
-  Wand2,
-  Rocket,
-  ShieldCheck,
-} from "lucide-react";
+  AudienceVignette,
+  BuildSetupVignette,
+  DescribeIntentVignette,
+  FastLaunchVignette,
+  GlobalVignette,
+  SafeVignette,
+} from "./FeatureVignettes";
+import Reveal from "./Reveal";
 
 const features = [
   {
     title: "Describe intent",
-    desc: "Write your campaign goal in plain English — target audience, budget, objective, and location. AdsForge AI parses your natural language description and maps it to the correct Meta Ads parameters.",
-    Icon: MessageSquare,
+    desc: "Write your goal in plain English — audience, budget, objective, location. AdsForge AI maps it to the correct Meta Ads parameters.",
+    Vignette: DescribeIntentVignette,
   },
   {
-    title: "AI translates to setup",
-    desc: "The AI automation engine generates a complete campaign configuration: audience segmentation, placement selection, bid strategy, and budget allocation — no Ads Manager knowledge required.",
-    Icon: Wand2,
+    title: "AI builds the setup",
+    desc: "A complete configuration is generated for you: audience segmentation, placements, bid strategy, and budget allocation.",
+    Vignette: BuildSetupVignette,
   },
   {
     title: "Hit the right audience",
-    desc: "AI-powered audience targeting uses interests, demographics, and lookalike signals tuned to your specific objective. Stop guessing which interest categories work — the platform selects them based on your intent.",
-    Icon: Target,
+    desc: "Interest, demographic, and lookalike signals are tuned to your objective — no more guessing which categories work.",
+    Vignette: AudienceVignette,
   },
   {
     title: "Global ready",
-    desc: "Run Meta Ads campaigns across multiple languages and regions with sensible defaults. Describe your target market in plain English and the platform configures the geographic and language targeting automatically.",
-    Icon: Globe,
+    desc: "Run campaigns across languages and regions with sensible defaults. Geographic and language targeting is configured automatically.",
+    Vignette: GlobalVignette,
   },
   {
     title: "Fast launch",
-    desc: "From natural language description to a fully configured campaign draft in minutes — not hours. Review the AI-generated setup, make any adjustments, and publish directly to Meta Ads Manager with one click.",
-    Icon: Rocket,
+    desc: "Go from a description to an editable campaign draft in minutes, then publish directly to Meta Ads Manager with one click.",
+    Vignette: FastLaunchVignette,
   },
   {
     title: "Safe by default",
-    desc: "Built-in policy compliance guardrails analyze your campaign configuration and creative assets before launch, reducing rejected ads and policy violations that waste time and budget.",
-    Icon: ShieldCheck,
+    desc: "Built-in policy checks analyze your setup and creative before launch, reducing rejected ads and wasted budget.",
+    Vignette: SafeVignette,
   },
 ];
 
+/*
+  A cell plays its vignette once when it first scrolls into view
+  (a short pulse gives the vignette a rising edge), and replays it
+  whenever the pointer enters.
+*/
+function FeatureCell({
+  title,
+  desc,
+  Vignette,
+}: {
+  title: string;
+  desc: string;
+  Vignette: ComponentType<{ active: boolean }>;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-64px" });
+  const [hovered, setHovered] = useState(false);
+  const [pulse, setPulse] = useState(false);
+
+  useEffect(() => {
+    if (!inView) return;
+    setPulse(true);
+    const id = setTimeout(() => setPulse(false), 200);
+    return () => clearTimeout(id);
+  }, [inView]);
+
+  return (
+    <motion.div
+      ref={ref}
+      className="border-r border-b border-edge p-6 transition-colors hover:bg-foreground/3 md:p-8"
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+    >
+      <div className="mb-5 flex h-16 items-end">
+        <Vignette active={hovered || pulse} />
+      </div>
+      <h3 className="font-medium">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-muted">{desc}</p>
+    </motion.div>
+  );
+}
+
 export default function Features() {
   return (
-    <section id="features" className="relative">
-      <div className="mx-auto max-w-6xl px-4 py-20">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.6 }}
-          className="text-center"
-        >
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
+    <section id="features" className="border-b border-edge">
+      <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+        <Reveal>
+          <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted">
+            Features
+          </p>
+          <h2 className="mt-3 max-w-xl text-balance text-3xl font-semibold tracking-tight md:text-4xl">
             Why marketers choose AdsForge AI
           </h2>
-          <p className="mt-3 opacity-80 max-w-2xl mx-auto">
-            Setting up Meta Ads campaigns manually takes hours of configuring
-            audiences, budgets, and placements. AdsForge AI is an AI-powered
-            automation platform that eliminates that complexity — describe your
-            marketing intent in natural language and get a fully configured,
-            editable campaign draft in minutes.
+          <p className="mt-4 max-w-2xl leading-relaxed text-muted">
+            Setting up Meta Ads manually takes hours of configuring audiences,
+            budgets, and placements. AdsForge AI removes that complexity without
+            taking away control.
           </p>
-        </motion.div>
+        </Reveal>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map(({ title, desc, Icon }, idx) => (
-            <motion.div
-              key={title}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-                transition: { delay: idx * 0.05, duration: 0.4 },
-              }}
-              viewport={{ once: true }}
-              whileHover="hover"
-              variants={{
-                hover: {
-                  y: -6,
-                  scale: 1.02,
-                  transition: { duration: 0.25, ease: "easeInOut" },
-                },
-              }}
-              whileTap={{ scale: 0.995 }}
-              className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-5 cursor-pointer transition-colors group transform-gpu hover:shadow-lg hover:shadow-fuchsia-500/10"
-            >
-              {/* Gradient BG on hover - Synced via Motion */}
-              <motion.div
-                variants={{
-                  hover: { opacity: 1 },
-                }}
-                initial={{ opacity: 0 }}
-                transition={{ duration: 0.25, ease: "easeInOut" }}
-                className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-fuchsia-500/10 to-amber-500/10"
+        <Reveal delay={0.1}>
+          <div className="mt-14 grid border-t border-l border-edge sm:grid-cols-2 lg:grid-cols-3">
+            {features.map(({ title, desc, Vignette }) => (
+              <FeatureCell
+                key={title}
+                title={title}
+                desc={desc}
+                Vignette={Vignette}
               />
-
-              {/* Border Gradient - Synced via Motion */}
-              <motion.div
-                variants={{
-                  hover: { opacity: 1 },
-                }}
-                initial={{ opacity: 0 }}
-                transition={{ duration: 0.25, ease: "easeInOut" }}
-                aria-hidden
-                className="absolute inset-0 rounded-xl ring-1 ring-inset ring-fuchsia-400/20"
-              />
-
-              <div className="relative z-10">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-white/10 p-2 text-white/80 ring-1 ring-inset ring-white/10 transition-colors duration-300 group-hover:bg-fuchsia-400/20 group-hover:text-fuchsia-200 group-hover:ring-fuchsia-400/30">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="font-medium text-white group-hover:text-white transition-colors">
-                    {title}
-                  </h3>
-                </div>
-                <p className="mt-3 text-sm opacity-80 group-hover:opacity-90 transition-opacity">
-                  {desc}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </Reveal>
       </div>
     </section>
   );

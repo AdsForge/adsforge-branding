@@ -1,189 +1,580 @@
+"use client";
+
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { analytics } from "@/lib/analytics";
+import { EASE, SPRING } from "@/lib/motion";
+import ThemeToggle from "./ThemeToggle";
+import { btnPrimary } from "./ui";
+
+const LOGIN_URL = "https://app.adsforge.io/login";
+
+const LINKS = [
+  { href: "/#live-demo", label: "Demo", section: "live-demo" },
+  { href: "/#how-it-works", label: "How it works", section: "how-it-works" },
+  { href: "/#features", label: "Features", section: "features" },
+  { href: "/blog", label: "Blog", section: null },
+  { href: "/#contact", label: "Contact", section: "contact" },
+] as const;
+
+const SECTION_IDS = ["live-demo", "how-it-works", "features", "contact"];
+
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+
+function LogoCluster({ onClick }: { onClick?: () => void }) {
+  return (
+    <Link
+      href="/"
+      className={`flex items-center gap-2.5 ${focusRing}`}
+      onClick={onClick}
+    >
+      <Image
+        src="/logos/Color Dark - Logo.svg"
+        alt=""
+        width={34}
+        height={22}
+        priority
+      />
+      <span className="text-[15px] font-semibold tracking-tight">
+        AdsForge <span className="font-normal text-muted">AI</span>
+      </span>
+    </Link>
+  );
+}
+
+function NavLink({
+  href,
+  label,
+  index,
+  active,
+  ariaCurrent,
+  reduceMotion,
+  inkId,
+  textClass,
+}: {
+  href: string;
+  label: string;
+  index?: string;
+  active: boolean;
+  ariaCurrent?: "true" | "page";
+  reduceMotion: boolean;
+  inkId: string;
+  textClass: string;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={ariaCurrent}
+      className={`relative inline-flex items-baseline ${textClass} ${focusRing}`}
+    >
+      {index !== undefined && (
+        <span
+          className={`mr-1.5 font-mono text-[10px] ${
+            active ? "text-accent" : "text-faint"
+          }`}
+        >
+          {index}
+        </span>
+      )}
+      <span
+        className={`block transition-colors ${
+          active ? "text-foreground" : "text-muted hover:text-foreground"
+        }`}
+      >
+        {label}
+      </span>
+      {active && (
+        <motion.span
+          aria-hidden
+          layoutId={inkId}
+          transition={reduceMotion ? { duration: 0 } : SPRING}
+          className="absolute left-0 top-[calc(100%+6px)] h-px w-full bg-accent"
+        />
+      )}
+    </Link>
+  );
+}
 
 export function Navbar() {
+  const pathname = usePathname();
+  const reduceMotion = useReducedMotion() ?? false;
+
+  /* Mobile bar backdrop */
+  const [condensed, setCondensed] = useState(false);
+  /* Desktop floating dock */
+  const [docked, setDocked] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const prevOpenRef = useRef(false);
+
+  const onHome = pathname === "/";
+  const onBlog = pathname === "/blog" || pathname.startsWith("/blog/");
+
+  /*
+    Scroll-driven state, both with hysteresis:
+    - mobile bar backdrop: on past 24, released below 8
+    - dock: shows past 160, hides below 120
+  */
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setCondensed((prev) => (prev ? y >= 8 : y > 24));
+      setDocked((prev) => (prev ? y >= 120 : y > 160));
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /* Scrollspy — only mounts on the home route. */
+  useEffect(() => {
+    if (!onHome) {
+      setActiveId(null);
+      return;
+    }
+    const sections = SECTION_IDS.map((id) =>
+      document.getElementById(id),
+    ).filter((el): el is HTMLElement => el !== null);
+    if (sections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          setActiveId((prev) =>
+            entry.isIntersecting
+              ? entry.target.id
+              : prev === entry.target.id
+                ? null
+                : prev,
+          );
+        }
+      },
+      { rootMargin: "-45% 0px -50% 0px" },
+    );
+    for (const el of sections) observer.observe(el);
+    return () => observer.disconnect();
+  }, [onHome]);
+
+  /* Body scroll lock while the mobile menu is open. */
+  useEffect(() => {
+    if (!open) return;
+    const docEl = document.documentElement;
+    const prevDoc = docEl.style.overflow;
+    const prevBody = document.body.style.overflow;
+    docEl.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      docEl.style.overflow = prevDoc;
+      document.body.style.overflow = prevBody;
+    };
+  }, [open]);
+
+  /* Focus trap + Esc while open; first focus lands on the close button. */
+  useEffect(() => {
+    if (!open) return;
+    closeBtnRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const root = overlayRef.current;
+      if (!root) return;
+      const focusables = Array.from(
+        root.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"),
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (!root.contains(document.activeElement)) {
+        e.preventDefault();
+        first.focus();
+      } else if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  /* Return focus to the hamburger when the menu closes. */
+  useEffect(() => {
+    if (prevOpenRef.current && !open) triggerRef.current?.focus();
+    prevOpenRef.current = open;
+  }, [open]);
+
+  /* Close the overlay if the viewport grows past the mobile breakpoint. */
+  useEffect(() => {
+    if (!open) return;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const onChange = () => {
+      if (mq.matches) setOpen(false);
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [open]);
+
+  const isActive = (link: (typeof LINKS)[number]) => {
+    if (onBlog) return link.href === "/blog";
+    if (onHome) return link.section !== null && link.section === activeId;
+    return false;
+  };
+
+  const ariaCurrentFor = (
+    link: (typeof LINKS)[number],
+  ): "true" | "page" | undefined => {
+    if (onBlog && link.href === "/blog") return "page";
+    if (onHome && isActive(link)) return "true";
+    return undefined;
+  };
+
+  const listVariants = {
+    hidden: {},
+    visible: {
+      transition: reduceMotion
+        ? {}
+        : { delayChildren: 0.1, staggerChildren: 0.05 },
+    },
+  } as const;
+
+  const itemVariants = reduceMotion
+    ? {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { duration: 0.01 } },
+      }
+    : {
+        hidden: { y: "110%", opacity: 0 },
+        visible: {
+          y: "0%",
+          opacity: 1,
+          transition: { duration: 0.5, ease: EASE },
+        },
+      };
+
   return (
-    <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between border-b border-white/10">
-        <Link href="/" className="flex items-center gap-2">
-          <svg
-            className="w-28 sm:w-36 md:w-44 lg:w-48 h-auto"
-            id="Layer_2"
-            data-name="Layer 2"
-            xmlns="http://www.w3.org/2000/svg"
-            xmlnsXlink="http://www.w3.org/1999/xlink"
-            viewBox="0 0 166.16 24.78"
-          >
-            <defs>
-              <style>
-                {`
-                   @import url('https://fonts.googleapis.com/css?family=Roboto:500');
-                .cls-1 {
-                letter-spacing: -.01em;
-              }
+    <>
+      {/* A) Top header — static, in-flow, desktop only */}
+      <header className="hidden w-full md:block">
+        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4">
+          <LogoCluster />
 
-                .cls-2 {
-                fill: url(#linear-gradient-2);
-              }
-
-                .cls-3, .cls-4 {
-                fill: #fff;
-              }
-
-                .cls-5 {
-                fill: url(#linear-gradient-3);
-              }
-
-                .cls-6 {
-                fill: none;
-                stroke: #fff;
-                stroke-linecap: round;
-                stroke-miterlimit: 10;
-              }
-
-                .cls-7 {
-                letter-spacing: 0em;
-              }
-
-                .cls-4 {
-                fontFamily: Roboto-Medium, Roboto;
-                font-size: 22px;
-                fontWeight: 500;
-              }
-
-                .cls-8 {
-                fill: url(#linear-gradient);
-              }`}
-              </style>
-              <linearGradient
-                id="linear-gradient"
-                x1="159.91"
-                y1="19.58"
-                x2="147.4"
-                y2="7.43"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop offset="0" stopColor="#21c3ee" />
-                <stop offset="0" stopColor="#21c2ed" />
-                <stop offset=".69" stopColor="#8b94c8" />
-                fontFamily
-                <stop offset="1" stopColor="#b582ba" />
-              </linearGradient>
-              <linearGradient
-                id="linear-gradient-2"
-                x1="169.34"
-                y1="17.19"
-                x2="159.84"
-                y2="6.41"
-                xlinkHref="#linear-gradient"
-              />
-              <linearGradient
-                id="linear-gradient-3"
-                x1="0"
-                y1="10.62"
-                x2="36.25"
-                y2="10.62"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop offset="0" stopColor="#b483b9" />
-                <stop offset="1" stopColor="#ffcf48" />
-              </linearGradient>
-            </defs>
-            <g id="Layer_1-2" data-name="Layer 1">
-              <g id="Adsforge">
-                <g>
-                  <path
-                    className="cls-8"
-                    d="M162,19.31c0,.09-.09.13-.26.13-.14,0-.33-.01-.6-.03-.26-.02-.46-.03-.6-.03s-.34.01-.61.03c-.27.02-.48.03-.61.03-.2,0-.46-.54-.77-1.63s-.63-1.63-.95-1.65c-.27-.01-.96-.02-2.07-.02h-1.7c-1.18,0-1.85,0-2.02.02-.26.02-.53.57-.82,1.65-.29,1.08-.51,1.62-.67,1.62h-2.42c-.14,0-.21-.05-.21-.15,0-.07.05-.23.15-.48l2.63-7.2c.22-.58.9-2.25,2.02-5.02.2-.46.47-1.15.82-2.07.09-.27.18-.41.28-.41.14,0,.34.02.6.05.26.04.47.05.6.05.13,0,.32-.02.59-.06.26-.04.45-.06.57-.06.06,0,.15.13.27.4.17.4,1.02,2.56,2.55,6.48,2.16,5.51,3.23,8.29,3.23,8.34ZM156.99,13.38c0-.21-.32-1.14-.97-2.79-.62-1.6-1.06-2.66-1.32-3.16-1.48,3.78-2.22,5.76-2.22,5.94,0,.24.27.39.82.43.03,0,.38.01,1.05.01h1.11c1.02,0,1.54-.14,1.54-.43Z"
-                  />
-                  <path
-                    className="cls-2"
-                    d="M166.16,19.22c0,.15-.1.23-.31.23-.13,0-.33-.01-.59-.03-.27-.02-.46-.03-.59-.03-.14,0-.34.01-.6.03-.27.02-.46.03-.59.03-.18,0-.27-.08-.27-.25,0-.82.04-2.05.11-3.69s.11-2.88.11-3.7-.04-1.99-.11-3.58c-.08-1.59-.11-2.79-.11-3.58,0-.18.08-.27.25-.27.14,0,.34.01.62.03s.49.03.63.03c.13,0,.32-.01.58-.03s.45-.03.58-.03c.19,0,.28.07.28.21,0,.8-.03,2.01-.09,3.61-.06,1.6-.09,2.81-.09,3.61s.03,2.06.09,3.71c.06,1.65.09,2.88.09,3.71Z"
-                  />
-                </g>
-                <g>
-                  <path
-                    className="cls-5"
-                    d="M18.28,14.91c0,.08.03.16.03.25,0,1.24-1.01,2.25-2.25,2.25-1.08,0-1.98-.76-2.2-1.77l-5.13-3.5c-.16.04-.33.07-.51.07l-3.71,4.25s.01.07.01.11c0,1.69-1.86,2.95-3.65,1.83-.17-.11-.32-.26-.43-.43-1.12-1.79.14-3.65,1.83-3.65.04,0,.08.01.12.01l3.58-4.1c-.01-.09-.03-.18-.03-.27,0-1.24,1.01-2.25,2.25-2.25,1.14,0,2.08.85,2.22,1.96l4.93,3.37c.22-.07.45-.12.7-.12l6.15-7.3c-.01-.1-.03-.2-.03-.31,0-1.69,1.87-2.95,3.66-1.82.17.11.32.26.43.43,1.1,1.77-.11,3.59-1.76,3.64l-6.21,7.37ZM35.72,2.78c-.63-.54-1.58-.46-2.11.17l-11.08,13.03c-.54.63-.46,1.58.17,2.11.28.24.63.36.97.36.42,0,.85-.18,1.14-.53l11.08-13.03c.54-.63.46-1.58-.17-2.11Z"
-                  />
-                  <text
-                    fontFamily="Roboto, sans-serif"
-                    fontWeight="500"
-                    className="cls-4"
-                    transform="translate(47.01 18.82)"
-                  >
-                    <tspan x="0" y="0">
-                      ds
-                    </tspan>
-                    <tspan className="cls-1" x="23.77" y="0">
-                      F
-                    </tspan>
-                    <tspan x="35.63" y="0">
-                      o
-                    </tspan>
-                    <tspan className="cls-7" x="48.16" y="0">
-                      r
-                    </tspan>
-                    <tspan x="55.69" y="0">
-                      ge
-                    </tspan>
-                  </text>
-                  <path
-                    className="cls-3"
-                    d="M32.59,18.69h-2.83l12.58-15.64h2.44v15.64M42.19,18.69l.1-11.27-9.43,11.27"
-                  />
-                </g>
-                <line
-                  className="cls-6"
-                  x1="138.32"
-                  y1="4.37"
-                  x2="138.32"
-                  y2="21.73"
+          <div className="flex items-center gap-7">
+            <nav aria-label="Primary" className="flex items-center gap-7">
+              {LINKS.map((link, i) => (
+                <NavLink
+                  key={link.href}
+                  href={link.href}
+                  label={link.label}
+                  index={`0${i + 1}`}
+                  active={isActive(link)}
+                  ariaCurrent={ariaCurrentFor(link)}
+                  reduceMotion={reduceMotion}
+                  inkId="nav-ink-top"
+                  textClass="text-sm"
                 />
-              </g>
-            </g>
-          </svg>
-        </Link>
-        <nav className="hidden md:flex items-center gap-6 text-sm">
-          <Link
-            href="/#features"
-            className="opacity-80 hover:opacity-100 transition"
-          >
-            Features
-          </Link>
-          <Link
-            href="/#live-demo"
-            className="opacity-80 hover:opacity-100 transition"
-          >
-            Live demo
-          </Link>
-          {/* <Link
-            href="/docs"
-            className="opacity-80 hover:opacity-100 transition"
-          >
-            SDK Integration
-          </Link> */}
-          <Link
-            href="/#contact"
-            className="opacity-80 hover:opacity-100 transition"
-          >
-            Contact
-          </Link>
-        </nav>
-        <a
-          href="https://app.adsforge.io/login"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group relative isolate inline-flex items-center justify-center overflow-hidden rounded-full bg-white px-4 py-2 text-sm font-medium text-black shadow transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95 hover:shadow-lg hover:shadow-cyan-500/25"
-        >
-          {/* Gradient Overlay */}
-          <span className="absolute inset-0 -z-10 bg-gradient-to-br from-cyan-400 via-fuchsia-400 to-amber-300 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" />
-          <span className="relative z-10 transition-colors duration-300 group-hover:text-white">
-            Login
-          </span>
-        </a>
+              ))}
+            </nav>
+
+            <ThemeToggle />
+
+            <a
+              href={LOGIN_URL}
+              className={`text-sm text-muted transition-colors hover:text-foreground ${focusRing}`}
+              onClick={() => analytics.trackButtonClick("log_in", "header")}
+            >
+              Log in
+            </a>
+            <a
+              href={LOGIN_URL}
+              className={btnPrimary}
+              onClick={() =>
+                analytics.trackButtonClick("get_started", "header")
+              }
+            >
+              Get started
+            </a>
+          </div>
+        </div>
+      </header>
+
+      {/* B) The Dock — floating capsule once the header scrolls away */}
+      <div className="pointer-events-none fixed inset-x-0 top-4 z-50 hidden justify-center md:flex">
+        <AnimatePresence>
+          {docked && (
+            <motion.div
+              className="pointer-events-auto flex h-12 items-center gap-5 rounded-xl border border-edge-strong bg-background/90 px-3 shadow-card backdrop-blur"
+              initial={reduceMotion ? { opacity: 0 } : { y: -24, opacity: 0 }}
+              animate={reduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
+              exit={
+                reduceMotion
+                  ? { opacity: 0, transition: { duration: 0.01 } }
+                  : {
+                      y: -12,
+                      opacity: 0,
+                      transition: { duration: 0.2, ease: EASE },
+                    }
+              }
+              transition={reduceMotion ? { duration: 0.01 } : SPRING}
+            >
+              <Link
+                href="/"
+                aria-label="AdsForge home"
+                className={`inline-flex items-center ${focusRing}`}
+              >
+                <Image
+                  src="/logos/Color Dark - Logo.svg"
+                  alt=""
+                  width={26}
+                  height={17}
+                />
+              </Link>
+
+              <span aria-hidden className="h-5 w-px bg-edge" />
+
+              <nav
+                aria-label="Quick navigation"
+                className="flex items-center gap-5"
+              >
+                {LINKS.map((link) => (
+                  <NavLink
+                    key={link.href}
+                    href={link.href}
+                    label={link.label}
+                    active={isActive(link)}
+                    ariaCurrent={ariaCurrentFor(link)}
+                    reduceMotion={reduceMotion}
+                    inkId="nav-ink-dock"
+                    textClass="text-[13px]"
+                  />
+                ))}
+              </nav>
+
+              <span aria-hidden className="h-5 w-px bg-edge" />
+
+              <ThemeToggle className="h-8! w-8!" />
+
+              <a
+                href={LOGIN_URL}
+                className={`rounded-md bg-accent-fill px-3 py-1.5 text-[13px] font-medium text-black transition-colors hover:bg-accent-fill-hover ${focusRing}`}
+                onClick={() =>
+                  analytics.trackButtonClick("get_started", "dock")
+                }
+              >
+                Get started
+              </a>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </header>
+
+      {/* C) Mobile bar — sticky, below md only */}
+      <header className="sticky top-0 z-50 w-full md:hidden">
+        <div className="relative h-14">
+          {/* Backdrop + hairline, faded in once scrolled */}
+          <motion.div
+            aria-hidden
+            className="absolute inset-0 border-b border-edge bg-background/85 backdrop-blur"
+            initial={false}
+            animate={{ opacity: condensed ? 1 : 0 }}
+            transition={
+              reduceMotion ? { duration: 0 } : { duration: 0.3, ease: EASE }
+            }
+          />
+
+          <div className="relative mx-auto flex h-full max-w-6xl items-center justify-between px-4">
+            <LogoCluster onClick={() => setOpen(false)} />
+
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+
+              <button
+                ref={triggerRef}
+                type="button"
+                aria-expanded={open}
+                aria-controls="mobile-nav"
+                aria-label={open ? "Close menu" : "Open menu"}
+                onClick={() => setOpen((v) => !v)}
+                className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-edge-strong ${focusRing}`}
+              >
+                {reduceMotion ? (
+                  <span className="relative block h-4 w-4">
+                    <motion.span
+                      aria-hidden
+                      className="absolute inset-0 flex flex-col items-center justify-center gap-1.25"
+                      initial={false}
+                      animate={{ opacity: open ? 0 : 1 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <span className="h-[1.5px] w-4 bg-foreground" />
+                      <span className="h-[1.5px] w-4 bg-foreground" />
+                    </motion.span>
+                    <motion.span
+                      aria-hidden
+                      className="absolute inset-0"
+                      initial={false}
+                      animate={{ opacity: open ? 1 : 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <span className="absolute left-0 top-1/2 h-[1.5px] w-4 -translate-y-1/2 rotate-45 bg-foreground" />
+                      <span className="absolute left-0 top-1/2 h-[1.5px] w-4 -translate-y-1/2 -rotate-45 bg-foreground" />
+                    </motion.span>
+                  </span>
+                ) : (
+                  <span className="flex flex-col items-center justify-center gap-1.25">
+                    <motion.span
+                      className="block h-[1.5px] w-4 bg-foreground"
+                      initial={false}
+                      animate={
+                        open ? { y: 3.25, rotate: 45 } : { y: 0, rotate: 0 }
+                      }
+                      transition={SPRING}
+                    />
+                    <motion.span
+                      className="block h-[1.5px] w-4 bg-foreground"
+                      initial={false}
+                      animate={
+                        open ? { y: -3.25, rotate: -45 } : { y: 0, rotate: 0 }
+                      }
+                      transition={SPRING}
+                    />
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile menu overlay */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            ref={overlayRef}
+            id="mobile-nav"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu"
+            className="fixed inset-0 z-60 bg-background md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{
+              opacity: 0,
+              transition: {
+                duration: reduceMotion ? 0.01 : 0.2,
+                ease: EASE,
+              },
+            }}
+            transition={{
+              duration: reduceMotion ? 0.01 : 0.25,
+              ease: EASE,
+            }}
+          >
+            {/* Mirror of the mobile bar so the icon appears not to move */}
+            <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+              <LogoCluster onClick={() => setOpen(false)} />
+              <div className="flex items-center gap-3">
+                <ThemeToggle />
+                <button
+                  ref={closeBtnRef}
+                  type="button"
+                  aria-label="Close menu"
+                  onClick={() => setOpen(false)}
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-edge-strong ${focusRing}`}
+                >
+                  <span className="relative block h-4 w-4">
+                    <span className="absolute left-0 top-1/2 h-[1.5px] w-4 -translate-y-1/2 rotate-45 bg-foreground" />
+                    <span className="absolute left-0 top-1/2 h-[1.5px] w-4 -translate-y-1/2 -rotate-45 bg-foreground" />
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <nav className="absolute inset-x-0 top-[18vh] px-6">
+              <motion.ul
+                variants={listVariants}
+                initial="hidden"
+                animate="visible"
+                className="flex flex-col gap-3.5"
+              >
+                {LINKS.map((link, i) => (
+                  <li key={link.href} className="border-b border-edge pb-3.5">
+                    <Link
+                      href={link.href}
+                      aria-current={ariaCurrentFor(link)}
+                      onClick={() => setOpen(false)}
+                      className={`block ${focusRing}`}
+                    >
+                      <span className="block overflow-hidden">
+                        <motion.span
+                          variants={itemVariants}
+                          className="flex items-baseline gap-3"
+                        >
+                          <span
+                            className={`font-mono text-[11px] ${
+                              isActive(link) ? "text-accent" : "text-faint"
+                            }`}
+                          >
+                            0{i + 1}
+                          </span>
+                          <span className="text-4xl font-semibold tracking-tight text-foreground">
+                            {link.label}
+                          </span>
+                        </motion.span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </motion.ul>
+            </nav>
+
+            <motion.div
+              className="absolute inset-x-0 bottom-0 flex flex-col gap-3 px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+              transition={
+                reduceMotion
+                  ? { duration: 0.01 }
+                  : { duration: 0.4, ease: EASE, delay: 0.35 }
+              }
+            >
+              <a
+                href={LOGIN_URL}
+                onClick={() => {
+                  analytics.trackButtonClick("log_in", "mobile_menu");
+                  setOpen(false);
+                }}
+                className={`py-1 text-center text-sm text-muted transition-colors hover:text-foreground ${focusRing}`}
+              >
+                Log in
+              </a>
+              <a
+                href={LOGIN_URL}
+                onClick={() => {
+                  analytics.trackButtonClick("get_started", "mobile_menu");
+                  setOpen(false);
+                }}
+                className={`${btnPrimary} w-full`}
+              >
+                Get started
+              </a>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 

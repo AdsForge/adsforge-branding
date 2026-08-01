@@ -1,263 +1,404 @@
 "use client";
 
-import { ReactNode, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ArrowUpRight } from "lucide-react";
+import { useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 import {
-  Settings2,
-  Users,
-  DollarSign,
-  Target,
-  FileText,
-  Loader2,
-} from "lucide-react";
-
-import { toast } from "sonner";
-import {
-  analyzeCampaignPrompt,
-  FacebookCampaign,
+  CURRENCY_SYMBOLS,
+  DEMO_EXAMPLES,
+  type DemoCreative,
+  type DemoExample,
+  type FacebookCampaign,
+  generateDemoCampaign,
+  SAMPLE_CAMPAIGN,
 } from "@/lib/campaignsService";
+import PhonePreview, { type AdPlatform } from "./PhonePreview";
+import Reveal from "./Reveal";
+
+/* --------------------------- formatting ---------------------------- */
+
+const OBJECTIVE_LABELS: Record<string, string> = {
+  OUTCOME_ENGAGEMENT: "Engagement",
+  OUTCOME_TRAFFIC: "Traffic",
+  OUTCOME_CONVERSIONS: "Conversions",
+  OUTCOME_LEADS: "Leads",
+  OUTCOME_AWARENESS: "Awareness",
+  OUTCOME_SALES: "Sales",
+};
+
+const GENDER_LABELS: Record<string, string> = {
+  ALL: "All genders",
+  MALE: "Men",
+  FEMALE: "Women",
+};
+
+const PLACEMENT_LABELS: Record<string, string> = {
+  feed: "Facebook Feed",
+  instagram_stream: "Instagram Feed",
+  story: "Stories",
+  instagram_story: "Stories",
+  reels: "Reels",
+  instagram_reels: "Reels",
+  marketplace: "Marketplace",
+  video_feeds: "Video Feeds",
+  right_hand_column: "Right column",
+  instagram_explore: "Explore",
+  messenger_inbox: "Messenger",
+};
+
+function prettify(value: string): string {
+  const words = value
+    .toLowerCase()
+    .split(/[_\s]+/)
+    .join(" ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+function formatDate(value?: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function buildSpec(c: FacebookCampaign) {
+  const rows: { label: string; value: string }[] = [];
+
+  rows.push({
+    label: "Objective",
+    value: OBJECTIVE_LABELS[c.objective] ?? prettify(c.objective ?? "—"),
+  });
+
+  const gender = GENDER_LABELS[c.genders] ?? prettify(c.genders ?? "All");
+  const age = c.ageMin && c.ageMax ? `${c.ageMin}–${c.ageMax}` : null;
+  rows.push({
+    label: "Audience",
+    value: age ? `${gender}, ${age}` : gender,
+  });
+
+  if (c.countries?.length) {
+    rows.push({ label: "Locations", value: c.countries.join(", ") });
+  }
+
+  if (c.budget?.value) {
+    const symbol = CURRENCY_SYMBOLS[c.currency] ?? "$";
+    rows.push({
+      label: "Budget",
+      value:
+        c.budget.budgetType === "DAILY"
+          ? `${symbol}${c.budget.value} / day`
+          : `${symbol}${c.budget.value} lifetime`,
+    });
+  }
+
+  const start = formatDate(c.startTime);
+  const end = formatDate(c.endTime);
+  if (start && end) {
+    const days = Math.max(
+      1,
+      Math.round(
+        (new Date(c.endTime).getTime() - new Date(c.startTime).getTime()) /
+          86_400_000,
+      ),
+    );
+    rows.push({ label: "Schedule", value: `${start} → ${end} · ${days} days` });
+  }
+
+  if (c.facebookAdPositions?.length) {
+    const placements = [
+      ...new Set(
+        c.facebookAdPositions.map((p) => PLACEMENT_LABELS[p] ?? prettify(p)),
+      ),
+    ];
+    rows.push({ label: "Placements", value: placements.join(", ") });
+  }
+
+  return rows;
+}
+
+/* ----------------------------- section ----------------------------- */
 
 export default function LiveDemo() {
-  const [prompt, setPrompt] = useState("");
+  const reduceMotion = useReducedMotion();
+  const [selectedId, setSelectedId] = useState<DemoCreative>(
+    DEMO_EXAMPLES[0].id,
+  );
   const [isLoading, setIsLoading] = useState(false);
-  const [campaign, setCampaign] = useState<FacebookCampaign | null>(null);
+  const [campaign, setCampaign] = useState<FacebookCampaign>(SAMPLE_CAMPAIGN);
+  const [isSample, setIsSample] = useState(true);
+  const [platform, setPlatform] = useState<AdPlatform>("facebook");
 
-  const handleGenerate = async () => {
-    if (!prompt.trim()) {
-      toast.error("Please enter a campaign description");
-      return;
-    }
+  const selected =
+    DEMO_EXAMPLES.find((e) => e.id === selectedId) ?? DEMO_EXAMPLES[0];
 
+  const handleSelect = async (example: DemoExample) => {
+    if (isLoading) return;
+    setSelectedId(example.id);
     setIsLoading(true);
-
-    try {
-      const result = await analyzeCampaignPrompt(prompt);
-      setCampaign(result);
-      toast.success("Campaign generated successfully!");
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to generate campaign";
-      toast.error(errorMessage);
-      console.error("Campaign generation error:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    trackEvent("demo_generate", { example: example.id });
+    const result = await generateDemoCampaign(example.id);
+    setCampaign(result);
+    setIsSample(false);
+    setIsLoading(false);
   };
 
-  const formatAudienceTargeting = () => {
-    if (!campaign) return "Not generated yet";
-
-    const genderText =
-      campaign.genders === "ALL" ? "All genders" : campaign.genders;
-    const ageText = `${campaign.ageMin}–${campaign.ageMax}`;
-    const locationText = campaign.countries.join(", ") || "All countries";
-
-    return `${genderText}, ${ageText}, ${locationText}`;
-  };
-
-  const formatBudgetDuration = () => {
-    if (!campaign) return "Not generated yet";
-
-    const budgetType =
-      campaign.budget.budgetType === "DAILY" ? "day" : "lifetime";
-    const startDate = new Date(campaign.startTime).toLocaleDateString();
-    const endDate = new Date(campaign.endTime).toLocaleDateString();
-    const days = Math.ceil(
-      (new Date(campaign.endTime).getTime() -
-        new Date(campaign.startTime).getTime()) /
-        (1000 * 60 * 60 * 24),
-    );
-
-    return `$${campaign.budget.value}/${budgetType} for ${days} days (${startDate} - ${endDate})`;
-  };
-
-  const formatObjective = () => {
-    if (!campaign) return "Not generated yet";
-
-    const objectiveMap: Record<string, string> = {
-      OUTCOME_ENGAGEMENT: "Engagement",
-      OUTCOME_TRAFFIC: "Traffic",
-      OUTCOME_CONVERSIONS: "Conversions",
-    };
-
-    return objectiveMap[campaign.objective] || campaign.objective;
-  };
-
-  const formatAdCopy = () => {
-    if (!campaign)
-      return (
-        prompt.trim() ||
-        '"Transform your life with MMA training. Join our elite gym today!"'
-      );
-
-    return (
-      campaign.primaryText ||
-      campaign.headline ||
-      campaign.description ||
-      "No ad copy generated"
-    );
-  };
+  const spec = buildSpec(campaign);
+  const interests =
+    campaign.interests?.map((i) => i.name).filter(Boolean) ?? [];
 
   return (
-    <section id="live-demo" className="relative">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl" />
-      </div>
-      <div className="mx-auto max-w-6xl px-4 py-20">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
-            Try it yourself
-          </h2>
-          <p className="mt-3 opacity-80 max-w-2xl mx-auto">
-            See AdsForge AI in action. Type a campaign description below and
-            watch the AI generate audience targeting, budget allocation, and
-            ad copy in real time — no account needed.
+    <section id="live-demo" className="border-b border-edge">
+      <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+        <Reveal>
+          <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted">
+            Live demo
           </p>
-        </div>
-        <motion.div
-          className="grid gap-6 lg:grid-cols-2 items-start"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
-            <h3 className="text-lg font-medium flex items-center gap-2">
-              <Settings2 className="h-5 w-5" /> Describe Your Campaign
-            </h3>
-            <div className="mt-4 space-y-4">
-              <textarea
-                className="mt-1 w-full min-h-40 rounded-lg bg-white/10 px-3 py-2 text-sm outline-none ring-1 ring-inset ring-white/20 transition-colors focus:bg-white/15 focus:ring-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="Example: Create a Meta ad for my MMA gym targeting men aged 18–35 in Europe, budget $15/day for 2 weeks, objective is lead generation"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                disabled={isLoading}
-              />
-              <motion.button
-                className={`group relative isolate inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg px-4 py-2 text-sm font-medium transition-transform focus:outline-none ${
-                  isLoading
-                    ? "bg-white/10 text-white/60 cursor-not-allowed"
-                    : "bg-white text-black shadow-lg hover:scale-[1.02] active:scale-[0.98] hover:shadow-cyan-500/25"
-                }`}
-                onClick={handleGenerate}
-                disabled={isLoading}
-              >
-                {!isLoading && (
-                  <span className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-br from-cyan-400 via-fuchsia-400 to-amber-300 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" />
-                )}
-                <span
-                  className={`relative z-10 flex items-center gap-2 transition-colors duration-300 ${!isLoading ? "group-hover:text-white" : ""}`}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
+          <h2 className="mt-3 max-w-xl text-balance text-3xl font-semibold tracking-tight md:text-4xl">
+            Pick a brief. Watch it become an ad.
+          </h2>
+          <p className="mt-4 max-w-2xl leading-relaxed text-muted">
+            An interactive preview of how AdsForge works — no account needed.
+            Choose one of the sample briefs and watch a complete campaign setup
+            take shape, previewed exactly as it would appear in the Facebook and
+            Instagram feed.
+          </p>
+        </Reveal>
+
+        <div className="mt-12 grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_auto]">
+          {/* left: composer + spec sheet */}
+          <Reveal delay={0.1}>
+            <div className="rounded-xl border border-edge-strong bg-surface">
+              <div className="flex items-baseline justify-between border-b border-edge px-5 pt-4 pb-3">
+                <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-faint">
+                  Campaign brief
+                </p>
+                <p className="font-mono text-[11px] text-faint">
+                  {isLoading ? "analyzing…" : "ready"}
+                </p>
+              </div>
+              {isLoading && (
+                <div className="relative h-px w-full overflow-hidden bg-edge">
+                  {reduceMotion ? (
+                    <div className="absolute inset-0 bg-accent" />
                   ) : (
-                    <>
-                      <Settings2 className="h-4 w-4" /> Generate Campaign
-                    </>
+                    <motion.div
+                      className="absolute inset-y-0 left-0 h-px w-1/3 bg-accent"
+                      animate={{ x: ["-100%", "400%"] }}
+                      transition={{
+                        duration: 1.1,
+                        ease: "linear",
+                        repeat: Infinity,
+                      }}
+                    />
                   )}
-                </span>
-              </motion.button>
+                </div>
+              )}
+              {/* the selected brief, rendered like a typed prompt */}
+              <div className="min-h-20 px-5 py-4">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.p
+                    key={selected.id}
+                    className="font-mono text-sm leading-relaxed text-foreground"
+                    initial={reduceMotion ? false : { opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {selected.prompt}
+                    <span className="caret" aria-hidden />
+                  </motion.p>
+                </AnimatePresence>
+              </div>
+              <div className="border-t border-edge px-5 py-4">
+                <p className="text-xs text-faint">
+                  Pick a brief — the campaign generates instantly:
+                </p>
+                <div className="mt-3 flex flex-col gap-2">
+                  {DEMO_EXAMPLES.map((example, i) => {
+                    const active = example.id === selectedId && !isSample;
+                    return (
+                      <button
+                        key={example.id}
+                        type="button"
+                        aria-pressed={active}
+                        className={`flex items-baseline gap-3 rounded-md border px-3 py-2 text-left text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                          active
+                            ? "border-accent/60 text-foreground"
+                            : "border-edge text-muted hover:border-edge-strong hover:text-foreground"
+                        }`}
+                        onClick={() => handleSelect(example)}
+                        disabled={isLoading}
+                      >
+                        <span
+                          className={`font-mono text-[10px] ${
+                            active ? "text-accent" : "text-faint"
+                          }`}
+                        >
+                          0{i + 1}
+                        </span>
+                        {example.prompt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
 
-          <motion.div
-            className="rounded-2xl border border-white/10 bg-white/5 p-5 relative overflow-hidden"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.4 }}
-          >
-            <h3 className="text-lg font-medium">Generated Campaign</h3>
-            <p className="text-xs opacity-70 mt-1">
-              AI-optimized settings ready to launch
-            </p>
-
-            <AnimatePresence mode="wait">
-              {isLoading ? (
-                <motion.div
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="mt-4 flex flex-col items-center justify-center py-12"
-                >
-                  <Loader2 className="h-12 w-12 animate-spin text-blue-400" />
-                  <p className="mt-4 text-sm opacity-70">
-                    Analyzing your campaign...
-                  </p>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="content"
-                  className="mt-4 space-y-3"
-                  initial="hidden"
+            {/* spec sheet */}
+            <div className="mt-8">
+              <div className="flex items-baseline justify-between">
+                <h3 className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted">
+                  Generated setup
+                </h3>
+                {isSample ? (
+                  <span className="text-xs text-faint">
+                    Example campaign — pick a brief above
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className="relative flex h-1.5 w-1.5"
+                      aria-hidden="true"
+                    >
+                      {!reduceMotion && (
+                        <motion.span
+                          key={`${campaign.name}-${campaign.headline}`}
+                          className="absolute inset-0 rounded-full bg-accent"
+                          initial={{ scale: 1, opacity: 0.7 }}
+                          animate={{ scale: 2.6, opacity: 0 }}
+                          transition={{ duration: 1.2, ease: "easeOut" }}
+                        />
+                      )}
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                    </span>
+                    <span className="font-mono text-[11px] text-muted">
+                      Generated just now
+                    </span>
+                  </span>
+                )}
+              </div>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.dl
+                  key={`${campaign.name}-${campaign.headline}`}
+                  className="mt-4 border-t border-edge"
+                  initial={reduceMotion ? false : "hidden"}
                   animate="visible"
                   variants={{
                     hidden: { opacity: 0 },
                     visible: {
                       opacity: 1,
-                      transition: { staggerChildren: 0.08 },
+                      transition: { staggerChildren: 0.09 },
                     },
                   }}
                 >
-                  <PreviewCard
-                    title="Audience Targeting"
-                    icon={<Users className="h-4 w-4" />}
-                  >
-                    {formatAudienceTargeting()}
-                  </PreviewCard>
-                  <PreviewCard
-                    title="Budget & Duration"
-                    icon={<DollarSign className="h-4 w-4" />}
-                  >
-                    {formatBudgetDuration()}
-                  </PreviewCard>
-                  <PreviewCard
-                    title="Campaign Objective"
-                    icon={<Target className="h-4 w-4" />}
-                  >
-                    {formatObjective()}
-                  </PreviewCard>
-                  <PreviewCard
-                    title="Ad Copy"
-                    icon={<FileText className="h-4 w-4" />}
-                  >
-                    {formatAdCopy()}
-                  </PreviewCard>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        </motion.div>
+                  {spec.map(({ label, value }) => (
+                    <motion.div
+                      key={label}
+                      className="grid grid-cols-[7rem_1fr] gap-4 border-b border-edge py-3 sm:grid-cols-[9rem_1fr]"
+                      variants={{
+                        hidden: { opacity: 0, y: 8 },
+                        visible: { opacity: 1, y: 0 },
+                      }}
+                    >
+                      <dt className="text-sm text-faint">{label}</dt>
+                      <dd className="font-mono text-sm">{value}</dd>
+                    </motion.div>
+                  ))}
+                  {interests.length > 0 && (
+                    <motion.div
+                      className="grid grid-cols-[7rem_1fr] gap-4 border-b border-edge py-3 sm:grid-cols-[9rem_1fr]"
+                      variants={{
+                        hidden: { opacity: 0, y: 8 },
+                        visible: { opacity: 1, y: 0 },
+                      }}
+                    >
+                      <dt className="text-sm text-faint">Interests</dt>
+                      <dd className="flex flex-wrap gap-1.5">
+                        {interests.map((name) => (
+                          <span
+                            key={name}
+                            className="rounded-md border border-edge px-2 py-0.5 font-mono text-xs text-muted"
+                          >
+                            {name}
+                          </span>
+                        ))}
+                      </dd>
+                    </motion.div>
+                  )}
+                </motion.dl>
+              </AnimatePresence>
+              <p className="mt-4 text-xs text-faint">
+                Sample output for illustration — in the app, the AI engine
+                builds your real campaign and publishes it to Meta Ads Manager
+                in one click.{" "}
+                <a
+                  href="https://app.adsforge.io/login"
+                  className="inline-flex items-center gap-0.5 text-accent underline-offset-4 hover:underline"
+                  onClick={() =>
+                    trackEvent("cta_click", {
+                      cta: "try_with_account",
+                      location: "live_demo",
+                    })
+                  }
+                >
+                  Try it with your account
+                  <ArrowUpRight className="h-3 w-3" />
+                </a>
+              </p>
+            </div>
+          </Reveal>
+
+          {/* right: platform toggle + phone */}
+          <Reveal
+            delay={0.18}
+            className="justify-self-center lg:sticky lg:top-24"
+          >
+            <div
+              className="mx-auto mb-5 flex w-fit rounded-lg border border-edge-strong p-1"
+              role="tablist"
+              aria-label="Ad preview platform"
+            >
+              {(["facebook", "instagram"] as const).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  role="tab"
+                  aria-selected={platform === p}
+                  className={`relative rounded-md px-4 py-1.5 text-sm transition-colors ${
+                    platform === p
+                      ? "text-foreground"
+                      : "text-faint hover:text-muted"
+                  }`}
+                  onClick={() => setPlatform(p)}
+                >
+                  {platform === p && (
+                    <motion.span
+                      layoutId="platform-pill"
+                      className="absolute inset-0 rounded-md bg-foreground/8"
+                      transition={
+                        reduceMotion
+                          ? { duration: 0 }
+                          : { type: "spring", stiffness: 400, damping: 32 }
+                      }
+                    />
+                  )}
+                  <span className="relative capitalize">{p}</span>
+                </button>
+              ))}
+            </div>
+            <PhonePreview
+              campaign={campaign}
+              platform={platform}
+              dimmed={isLoading}
+            />
+          </Reveal>
+        </div>
       </div>
     </section>
-  );
-}
-
-function PreviewCard({
-  title,
-  icon,
-  children,
-}: {
-  title: string;
-  icon: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <motion.div
-      className="group rounded-xl border border-white/10 bg-white/5 p-4"
-      variants={{ hidden: { opacity: 0, y: 6 }, visible: { opacity: 1, y: 0 } }}
-      whileHover={{ y: -2 }}
-      transition={{ type: "spring", stiffness: 260, damping: 22 }}
-    >
-      <div className="flex items-center gap-2 text-blue-400 font-medium">
-        {icon} {title}
-      </div>
-      <div className="mt-2 text-sm opacity-90 transition-colors group-hover:opacity-100">
-        {children}
-      </div>
-    </motion.div>
   );
 }

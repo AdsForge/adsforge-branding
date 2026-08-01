@@ -15,6 +15,6 @@ export async function GET() {
 
   return NextResponse.json(
     { endAt: row.endAt.toISOString() },
-    { headers: { "Cache-Control": "no-store" } }
+    { headers: { "Cache-Control": "no-store" } },
   );
 }

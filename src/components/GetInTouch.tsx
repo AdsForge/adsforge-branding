@@ -1,20 +1,91 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Mail,
-  MessageSquare,
-  User,
-  Send,
-  Loader2,
-  Calendar,
-  Shield,
-  Check,
-} from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ArrowUpRight, Check, Loader2, Mail } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { analytics } from "@/lib/analytics";
+import { EASE } from "@/lib/motion";
+import Reveal from "./Reveal";
+import { btnPrimary } from "./ui";
+
+const MAX_LEN = 600;
+
+const kicker = "font-mono text-[11px] uppercase tracking-[0.25em] text-muted";
+
+function InlineField({
+  id,
+  label,
+  value,
+  placeholder,
+  minCh,
+  type = "text",
+  disabled,
+  invalid,
+  describedBy,
+  reduceMotion,
+  onChange,
+  onFieldBlur,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  placeholder: string;
+  minCh: number;
+  type?: string;
+  disabled: boolean;
+  invalid: boolean;
+  describedBy?: string;
+  reduceMotion: boolean;
+  onChange: (value: string) => void;
+  onFieldBlur: () => void;
+}) {
+  const [focused, setFocused] = useState(false);
+
+  const hairline = invalid
+    ? "border-red-600/50 dark:border-red-400/60"
+    : reduceMotion && focused
+      ? "border-accent"
+      : "border-edge-strong";
+
+  return (
+    <span className="relative inline-block max-w-full align-baseline">
+      <label htmlFor={id} className="sr-only">
+        {label}
+      </label>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        disabled={disabled}
+        aria-invalid={invalid}
+        aria-describedby={describedBy}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          setFocused(false);
+          onFieldBlur();
+        }}
+        style={{ width: `${Math.max(minCh, value.length + 1)}ch` }}
+        className={`max-w-full border-b bg-transparent font-mono text-base text-foreground caret-accent outline-none transition-colors placeholder:text-faint disabled:opacity-60 md:text-lg ${hairline}`}
+      />
+      {!reduceMotion && (
+        <motion.span
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-accent"
+          initial={false}
+          animate={{ scaleX: focused ? 1 : 0 }}
+          transition={{ duration: 0.25, ease: EASE }}
+        />
+      )}
+    </span>
+  );
+}
 
 export default function GetInTouch() {
+  const reduceMotion = useReducedMotion() ?? false;
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -26,15 +97,20 @@ export default function GetInTouch() {
     message: false,
   });
   const [submitted, setSubmitted] = useState(false);
+  const [sentInfo, setSentInfo] = useState<{
+    name: string;
+    email: string;
+  } | null>(null);
+  const [messageFocused, setMessageFocused] = useState(false);
 
-  const maxLen = 600;
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const errors = useMemo(() => {
-    const e: Record<string, string> = {};
-    if (name.trim().length < 2) e.name = "Please enter your full name.";
-    if (!/^\S+@\S+\.\S+$/.test(email)) e.email = "Enter a valid email.";
+    const e: { name?: string; email?: string; message?: string } = {};
+    if (name.trim().length < 2) e.name = "please enter your full name.";
+    if (!/^\S+@\S+\.\S+$/.test(email)) e.email = "enter a valid address.";
     if (message.trim().length < 10)
-      e.message = "Tell us a bit more (10+ chars).";
+      e.message = "tell us a bit more (10+ characters).";
     return e;
   }, [name, email, message]);
 
@@ -42,7 +118,22 @@ export default function GetInTouch() {
   const showEmailError = (touched.email || submitted) && !!errors.email;
   const showMessageError = (touched.message || submitted) && !!errors.message;
 
-  const disabled = loading; // keep neutral UI before interaction; allow submit to surface errors
+  const isSent = sentInfo !== null;
+  const status = isSent ? "sent" : loading ? "sending" : "draft";
+  const statusColor = isSent
+    ? "text-accent"
+    : loading
+      ? "text-muted"
+      : "text-faint";
+
+  /* Auto-grow the message textarea to fit its content. */
+  // biome-ignore lint/correctness/useExhaustiveDependencies: message drives scrollHeight
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${ta.scrollHeight}px`;
+  }, [message, isSent]);
 
   const onSubmit = useCallback(
     async (e?: React.FormEvent) => {
@@ -55,8 +146,7 @@ export default function GetInTouch() {
       }
       setLoading(true);
       try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-        const response = await fetch(`https://api.adsforge.io/contact`, {
+        const response = await fetch("https://api.adsforge.io/contact", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -72,27 +162,22 @@ export default function GetInTouch() {
           throw new Error("Failed to send message");
         }
 
+        analytics.trackFormSubmit("contact");
         toast.success("Thanks! We'll get back to you within 24 hours.", {
           duration: 5000,
-          description: "Your message has been sent successfully.",
         });
 
-        // Reset form
+        // Capture values for the receipt before clearing the draft.
+        setSentInfo({ name: name.trim(), email: email.trim() });
         setName("");
         setEmail("");
         setMessage("");
         setSubmitted(false);
-        setTouched({
-          name: false,
-          email: false,
-          message: false,
-        });
+        setTouched({ name: false, email: false, message: false });
       } catch (error) {
         console.error("Contact form error:", error);
-        toast.error("Something went wrong. Please try again.", {
-          duration: 4000,
-          description: "Unable to send your message at this time.",
-        });
+        analytics.trackError("contact_submit_failed", "contact_form");
+        toast.error("Something went wrong. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -100,249 +185,345 @@ export default function GetInTouch() {
     [errors, botField, name, email, message],
   );
 
+  const receiptRows = sentInfo
+    ? [
+        { label: "Status", value: "Sent" },
+        { label: "From", value: `${sentInfo.name} · ${sentInfo.email}` },
+        { label: "Reply", value: "within 24 hours" },
+        { label: "Channel", value: "adsforgeio@gmail.com" },
+      ]
+    : [];
+
+  const messageHairline = showMessageError
+    ? "border-red-600/50 dark:border-red-400/60"
+    : reduceMotion && messageFocused
+      ? "border-accent"
+      : "border-edge-strong";
+
+  const ledgerLines = [
+    { key: "name", id: "err-name", show: showNameError, text: errors.name },
+    {
+      key: "email",
+      id: "err-email",
+      show: showEmailError,
+      text: errors.email,
+    },
+    {
+      key: "message",
+      id: "err-message",
+      show: showMessageError,
+      text: errors.message,
+    },
+  ];
+
   return (
-    <section id="contact" className="relative overflow-hidden">
-      {/* Decorative glow */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -inset-[8rem] bg-[radial-gradient(ellipse_at_center,rgba(14,165,233,0.18),transparent_40%)]" />
-      </div>
+    <section id="contact">
+      <div className="mx-auto max-w-3xl px-4 py-20 md:py-28">
+        <Reveal>
+          <p className={kicker}>Contact</p>
+          <h2 className="mt-3 text-balance text-3xl font-semibold tracking-tight md:text-4xl">
+            Tell us what you're after — in plain English.
+          </h2>
+          <p className="mt-4 leading-relaxed text-muted">
+            Write it like a brief. We reply within 24 hours.
+          </p>
+        </Reveal>
 
-      <div className="mx-auto max-w-6xl px-4 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left column: pitch & benefits */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.5 }}
-            className="lg:col-span-5"
+        <Reveal delay={0.1}>
+          <form
+            onSubmit={onSubmit}
+            className="relative mt-10 overflow-hidden rounded-xl border border-edge-strong bg-surface shadow-card"
           >
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
-              Let’s{" "}
-              <span className="bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-300 bg-clip-text text-transparent">
-                craft
-              </span>{" "}
-              your next winning campaign
-            </h2>
-            <p className="mt-3 text-sm opacity-80 max-w-md">
-              Share your goals and we’ll tailor a plan. We typically reply
-              within 24 hours.
-            </p>
+            {/* Honeypot */}
+            <input
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={botField}
+              onChange={(e) => setBotField(e.target.value)}
+              className="hidden"
+              aria-hidden
+            />
 
-            {/* Quick contact chips */}
-            <div className="mt-5 flex flex-wrap items-center gap-2">
+            {/* Header row */}
+            <div className="flex items-center justify-between border-b border-edge px-5 py-3.5">
+              <p className={kicker}>Message brief</p>
+              <p className={`font-mono text-[11px] ${statusColor}`}>{status}</p>
+            </div>
+
+            {/* Body */}
+            <div className="px-5 py-6">
+              <AnimatePresence mode="wait" initial={false}>
+                {isSent ? (
+                  <motion.output
+                    key="receipt"
+                    className="block"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{
+                      opacity: 0,
+                      transition: { duration: reduceMotion ? 0 : 0.2 },
+                    }}
+                    transition={{
+                      duration: reduceMotion ? 0 : 0.25,
+                      ease: EASE,
+                    }}
+                  >
+                    <dl className="space-y-2">
+                      {receiptRows.map((row, i) => (
+                        <motion.div
+                          key={row.label}
+                          initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{
+                            duration: 0.3,
+                            ease: EASE,
+                            delay: reduceMotion ? 0 : i * 0.09,
+                          }}
+                          className="grid grid-cols-[6.5rem_1fr] items-baseline"
+                        >
+                          <dt className="text-xs text-faint">{row.label}</dt>
+                          <dd className="font-mono text-xs text-foreground">
+                            {row.value}
+                          </dd>
+                        </motion.div>
+                      ))}
+                    </dl>
+                    <motion.p
+                      initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.3,
+                        ease: EASE,
+                        delay: reduceMotion ? 0 : receiptRows.length * 0.09,
+                      }}
+                      className="mt-3 flex items-center gap-2 text-xs text-muted"
+                    >
+                      <Check className="h-3.5 w-3.5 text-accent" aria-hidden />
+                      Message sent — we'll get back to you within 24 hours.
+                    </motion.p>
+                    <button
+                      type="button"
+                      onClick={() => setSentInfo(null)}
+                      className="mt-4 font-mono text-xs text-muted transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    >
+                      write another →
+                    </button>
+                  </motion.output>
+                ) : (
+                  <motion.div
+                    key="draft"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{
+                      opacity: 0,
+                      transition: { duration: reduceMotion ? 0 : 0.25 },
+                    }}
+                    transition={{
+                      duration: reduceMotion ? 0 : 0.25,
+                      ease: EASE,
+                    }}
+                    className="font-mono text-base leading-[2.2] text-foreground md:text-lg"
+                  >
+                    <p>
+                      Hi, my name is{" "}
+                      <InlineField
+                        id="brief-name"
+                        label="Your name"
+                        value={name}
+                        placeholder="your name"
+                        minCh={9}
+                        disabled={loading}
+                        invalid={showNameError}
+                        describedBy={showNameError ? "err-name" : undefined}
+                        reduceMotion={reduceMotion}
+                        onChange={setName}
+                        onFieldBlur={() =>
+                          setTouched((t) => ({ ...t, name: true }))
+                        }
+                      />{" "}
+                      and you can reach me at{" "}
+                      <InlineField
+                        id="brief-email"
+                        label="Your email"
+                        value={email}
+                        placeholder="you@company.com"
+                        minCh={16}
+                        type="email"
+                        disabled={loading}
+                        invalid={showEmailError}
+                        describedBy={showEmailError ? "err-email" : undefined}
+                        reduceMotion={reduceMotion}
+                        onChange={setEmail}
+                        onFieldBlur={() =>
+                          setTouched((t) => ({ ...t, email: true }))
+                        }
+                      />
+                      . I'd like to talk about
+                    </p>
+                    <div className="relative mt-1">
+                      <label htmlFor="brief-message" className="sr-only">
+                        Your message
+                      </label>
+                      <textarea
+                        ref={textareaRef}
+                        id="brief-message"
+                        rows={2}
+                        value={message}
+                        placeholder="your goals, timeline, budget…"
+                        disabled={loading}
+                        aria-invalid={showMessageError}
+                        aria-describedby={
+                          showMessageError ? "err-message" : undefined
+                        }
+                        onChange={(e) =>
+                          setMessage(e.target.value.slice(0, MAX_LEN))
+                        }
+                        onKeyDown={(e) => {
+                          if ((e.metaKey || e.ctrlKey) && e.key === "Enter")
+                            onSubmit();
+                        }}
+                        onFocus={() => setMessageFocused(true)}
+                        onBlur={() => {
+                          setMessageFocused(false);
+                          setTouched((t) => ({ ...t, message: true }));
+                        }}
+                        className={`block min-h-[4.4em] w-full resize-none overflow-hidden border-b bg-transparent font-mono text-base leading-[2.2] text-foreground caret-accent outline-none transition-colors placeholder:text-faint disabled:opacity-60 md:text-lg ${messageHairline}`}
+                      />
+                      {!reduceMotion && (
+                        <motion.span
+                          aria-hidden
+                          className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-accent"
+                          initial={false}
+                          animate={{ scaleX: messageFocused ? 1 : 0 }}
+                          transition={{ duration: 0.25, ease: EASE }}
+                        />
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Footer row */}
+            <div className="flex items-center justify-between gap-4 border-t border-edge px-5 py-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-[11px] text-faint">
+                  Press{" "}
+                  <kbd className="rounded border border-edge px-1 font-mono">
+                    ⌘
+                  </kbd>
+                  <span className="mx-0.5">+</span>
+                  <kbd className="rounded border border-edge px-1 font-mono">
+                    Enter
+                  </kbd>{" "}
+                  to send
+                </p>
+                <p
+                  aria-hidden
+                  className={`font-mono text-[11px] ${
+                    message.length > 500 ? "text-muted" : "text-faint"
+                  }`}
+                >
+                  {message.length}/{MAX_LEN}
+                </p>
+              </div>
+              <button
+                type="submit"
+                disabled={loading || isSent}
+                className={btnPrimary}
+              >
+                {loading ? (
+                  <>
+                    <Loader2
+                      className={`h-4 w-4 ${reduceMotion ? "" : "animate-spin"}`}
+                    />{" "}
+                    Compiling…
+                  </>
+                ) : (
+                  "Send message"
+                )}
+              </button>
+            </div>
+
+            {/* Sending progress rail along the card's bottom edge */}
+            {loading && !reduceMotion && (
+              <motion.span
+                aria-hidden
+                className="absolute inset-x-0 bottom-0 h-px origin-left bg-accent"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{
+                  duration: 1.2,
+                  ease: "linear",
+                  repeat: Number.POSITIVE_INFINITY,
+                }}
+              />
+            )}
+          </form>
+
+          {/* Error ledger */}
+          <div aria-live="polite" className="mt-3 space-y-1">
+            <AnimatePresence initial={false}>
+              {ledgerLines
+                .filter((line) => line.show)
+                .map((line) => (
+                  <motion.p
+                    key={line.key}
+                    id={line.id}
+                    initial={
+                      reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }
+                    }
+                    animate={
+                      reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }
+                    }
+                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2, ease: EASE }}
+                    className="font-mono text-xs text-red-600 dark:text-red-400"
+                  >
+                    err: {line.key} — {line.text}
+                  </motion.p>
+                ))}
+            </AnimatePresence>
+          </div>
+
+          {/* Meta row */}
+          <div className="mt-10 flex flex-col gap-6 border-t border-edge pt-6 md:flex-row md:items-start md:justify-between">
+            <div className="flex flex-col gap-3 text-sm">
               <a
                 href="mailto:adsforgeio@gmail.com"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 transition"
+                className="inline-flex w-fit items-center gap-2 text-muted transition-colors hover:text-foreground"
               >
-                <Mail className="h-3.5 w-3.5 opacity-80" />
-                Email us
+                <Mail className="h-4 w-4" />
+                adsforgeio@gmail.com
               </a>
               <a
                 href="https://calendly.com/adsforgeio/30min"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 transition"
+                className="inline-flex w-fit items-center gap-2 text-muted transition-colors hover:text-foreground"
               >
-                <Calendar className="h-3.5 w-3.5 opacity-80" />
-                Book a 15‑min intro
+                <ArrowUpRight className="h-4 w-4" />
+                Book a 30-minute intro call
               </a>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] uppercase tracking-wide">
-                <Shield className="h-3.5 w-3.5 opacity-80" />
-                We’ll never share your data
-              </span>
             </div>
-
-            {/* Benefits list */}
-            <ul className="mt-6 space-y-2 text-sm opacity-90">
-              <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 text-cyan-400" />
-                Clear recommendations tailored to your objectives
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 text-fuchsia-400" />
-                Fast response — usually under 24 hours
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 text-amber-300" />
-                No spam, no sharing, ever
-              </li>
-            </ul>
-          </motion.div>
-
-          {/* Right column: form card */}
-          <motion.div
-            className="lg:col-span-7 rounded-3xl p-[1px] bg-gradient-to-br from-white/20 via-white/5 to-transparent"
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8 backdrop-blur-sm">
-              <form
-                className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                onSubmit={onSubmit}
-              >
-                {/* Honeypot */}
-                <input
-                  type="text"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  value={botField}
-                  onChange={(e) => setBotField(e.target.value)}
-                  className="hidden"
-                  aria-hidden
-                />
-
-                <label className="col-span-1">
-                  <span className="text-xs opacity-80">Your name</span>
-                  <div
-                    className={`mt-1 flex items-center gap-2 rounded-lg bg-white/10 ring-1 ring-inset px-3 ${
-                      showNameError
-                        ? "ring-red-400/50 focus-within:ring-red-400"
-                        : "ring-white/20 focus-within:ring-white/40"
-                    }`}
-                  >
-                    <User className="h-4 w-4 opacity-70" />
-                    <input
-                      className="w-full bg-transparent py-2 text-sm outline-none"
-                      placeholder="Jane Doe"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      onBlur={() => setTouched((t) => ({ ...t, name: true }))}
-                      aria-invalid={showNameError}
-                    />
-                  </div>
-                  <AnimatePresence initial={false}>
-                    {showNameError && (
-                      <motion.p
-                        className="mt-1 text-xs text-red-300"
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                      >
-                        {errors.name}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
-                </label>
-
-                <label className="col-span-1">
-                  <span className="text-xs opacity-80">Email</span>
-                  <div
-                    className={`mt-1 flex items-center gap-2 rounded-lg bg-white/10 ring-1 ring-inset px-3 ${
-                      showEmailError
-                        ? "ring-red-400/50 focus-within:ring-red-400"
-                        : "ring-white/20 focus-within:ring-white/40"
-                    }`}
-                  >
-                    <Mail className="h-4 w-4 opacity-70" />
-                    <input
-                      type="email"
-                      className="w-full bg-transparent py-2 text-sm outline-none"
-                      placeholder="you@company.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                      aria-invalid={showEmailError}
-                    />
-                  </div>
-                  <AnimatePresence initial={false}>
-                    {showEmailError && (
-                      <motion.p
-                        className="mt-1 text-xs text-red-300"
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                      >
-                        {errors.email}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
-                </label>
-
-                <label className="md:col-span-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs opacity-80">Message</span>
-                    <span className="text-[10px] opacity-70">
-                      {message.length}/{maxLen}
-                    </span>
-                  </div>
-                  <div
-                    className={`mt-1 flex items-start gap-2 rounded-lg bg-white/10 ring-1 ring-inset px-3 ${
-                      showMessageError
-                        ? "ring-red-400/50 focus-within:ring-red-400"
-                        : "ring-white/20 focus-within:ring-white/40"
-                    }`}
-                  >
-                    <MessageSquare className="mt-2 h-4 w-4 opacity-70" />
-                    <textarea
-                      className="w-full bg-transparent py-2 text-sm outline-none min-h-28 resize-vertical"
-                      placeholder="Tell us about your goals, timelines, and any constraints…"
-                      value={message}
-                      onChange={(e) =>
-                        setMessage(e.target.value.slice(0, maxLen))
-                      }
-                      onKeyDown={(e) => {
-                        if ((e.metaKey || e.ctrlKey) && e.key === "Enter")
-                          onSubmit();
-                      }}
-                      onBlur={() =>
-                        setTouched((t) => ({ ...t, message: true }))
-                      }
-                      aria-invalid={showMessageError}
-                    />
-                  </div>
-                  <AnimatePresence initial={false}>
-                    {showMessageError && (
-                      <motion.p
-                        className="mt-1 text-xs text-red-300"
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                      >
-                        {errors.message}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
-                  <p className="mt-2 text-[10px] opacity-70">
-                    Tip: Press <kbd className="rounded bg-white/10 px-1">⌘</kbd>
-                    /<kbd className="rounded bg-white/10 px-1">Ctrl</kbd> +{" "}
-                    <kbd className="rounded bg-white/10 px-1">Enter</kbd> to
-                    send
-                  </p>
-                </label>
-
-                <motion.button
-                  type="submit"
-                  disabled={disabled}
-                  className={`md:col-span-2 justify-self-center group relative isolate inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm focus:outline-none transition-transform ${
-                    disabled
-                      ? "bg-white/10 text-white/60 cursor-not-allowed"
-                      : "bg-white text-black shadow-lg hover:scale-[1.02] active:scale-[0.98] hover:shadow-cyan-500/25"
-                  }`}
+            <ul className="flex flex-col gap-2.5">
+              {[
+                "Tailored recommendations",
+                "Reply under 24h",
+                "No spam, ever",
+              ].map((item) => (
+                <li
+                  key={item}
+                  className="flex items-center gap-2 font-mono text-xs text-muted"
                 >
-                  {!disabled && (
-                    <span className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-br from-cyan-400 via-fuchsia-400 to-amber-300 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100" />
-                  )}
-                  <span
-                    className={`relative z-10 flex items-center gap-2 transition-colors duration-300 ${!disabled ? "group-hover:text-white" : ""}`}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> Sending…
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4" /> Send message
-                      </>
-                    )}
-                  </span>
-                </motion.button>
-              </form>
-            </div>
-          </motion.div>
-        </div>
+                  <Check className="h-3 w-3 text-accent" aria-hidden />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
       </div>
     </section>
   );

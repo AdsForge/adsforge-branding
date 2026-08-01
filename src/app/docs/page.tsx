@@ -333,7 +333,7 @@ const interests = await getMetaInterests('fitness')`,
 
 function MethodBadge({ name }: { name: string }) {
   return (
-    <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 border border-blue-500/30">
+    <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold bg-foreground/5 text-accent border border-edge-strong">
       {name}
     </span>
   );
@@ -367,7 +367,7 @@ function CodeBlock({
           <Copy className="w-4 h-4 text-gray-400" />
         )}
       </button>
-      <pre className="bg-black/40 rounded-lg p-4 overflow-x-auto border border-white/5">
+      <pre className="bg-[#161513] rounded-lg p-4 overflow-x-auto border border-[#2a2925]">
         <code className="text-sm font-mono text-gray-300">{code}</code>
       </pre>
     </div>
@@ -384,8 +384,7 @@ export default function DocsPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden border-b border-white/10">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10" />
+      <section className="relative overflow-hidden border-b border-edge">
         <div className="relative mx-auto max-w-6xl px-4 py-16 sm:py-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -393,14 +392,14 @@ export default function DocsPage() {
             transition={{ duration: 0.5 }}
             className="text-center"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6">
-              <Package className="w-4 h-4 text-blue-400" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface border border-edge mb-6">
+              <Package className="w-4 h-4 text-accent" />
               <span className="text-sm font-medium">SDK Documentation</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-foreground">
               AdsForge SDK
             </h1>
-            <p className="text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto mb-8">
+            <p className="text-lg sm:text-xl text-muted max-w-3xl mx-auto mb-8">
               The official TypeScript SDK for AdsForge. Build powerful Meta
               advertising integrations with type-safe functions and real-time
               campaign management.
@@ -408,30 +407,30 @@ export default function DocsPage() {
 
             {/* Quick Start Cards */}
             <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto mt-12">
-              <div className="bg-white/[0.02] border border-white/10 rounded-lg p-6 text-left">
+              <div className="bg-surface border border-edge rounded-lg p-6 text-left">
                 <div className="flex items-center gap-2 mb-3">
-                  <Package className="w-5 h-5 text-blue-400" />
+                  <Package className="w-5 h-5 text-accent" />
                   <h3 className="font-semibold">Install</h3>
                 </div>
-                <code className="text-sm text-gray-400">
+                <code className="text-sm text-muted">
                   npm install @adsforge/sdk
                 </code>
               </div>
-              <div className="bg-white/[0.02] border border-white/10 rounded-lg p-6 text-left">
+              <div className="bg-surface border border-edge rounded-lg p-6 text-left">
                 <div className="flex items-center gap-2 mb-3">
-                  <Code2 className="w-5 h-5 text-purple-400" />
+                  <Code2 className="w-5 h-5 text-accent" />
                   <h3 className="font-semibold">Import</h3>
                 </div>
-                <code className="text-sm text-gray-400">
+                <code className="text-sm text-muted">
                   import &#123; getMetaPages &#125;
                 </code>
               </div>
-              <div className="bg-white/[0.02] border border-white/10 rounded-lg p-6 text-left">
+              <div className="bg-surface border border-edge rounded-lg p-6 text-left">
                 <div className="flex items-center gap-2 mb-3">
-                  <BookOpen className="w-5 h-5 text-pink-400" />
+                  <BookOpen className="w-5 h-5 text-accent" />
                   <h3 className="font-semibold">TypeScript</h3>
                 </div>
-                <code className="text-sm text-gray-400">
+                <code className="text-sm text-muted">
                   Full type safety included
                 </code>
               </div>
@@ -453,10 +452,10 @@ export default function DocsPage() {
             >
               {/* Section Header */}
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                <h2 className="text-3xl font-bold text-foreground">
                   {section.title}
                 </h2>
-                <p className="text-gray-400">{section.description}</p>
+                <p className="text-muted">{section.description}</p>
               </div>
 
               {/* Methods */}
@@ -468,21 +467,21 @@ export default function DocsPage() {
                   return (
                     <div
                       key={key}
-                      className="rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur overflow-hidden hover:border-white/20 transition-colors"
+                      className="rounded-xl border border-edge bg-surface backdrop-blur overflow-hidden hover:border-edge-strong transition-colors"
                     >
                       {/* Method Header */}
                       <button
                         onClick={() => toggleMethod(key)}
-                        className="w-full px-6 py-4 flex items-center justify-between gap-4 text-left hover:bg-white/[0.02] transition-colors"
+                        className="w-full px-6 py-4 flex items-center justify-between gap-4 text-left hover:bg-foreground/3 transition-colors"
                       >
                         <div className="flex items-center gap-4 flex-1 min-w-0">
                           <MethodBadge name={method.name} />
-                          <p className="text-sm text-gray-400 truncate">
+                          <p className="text-sm text-muted truncate">
                             {method.description}
                           </p>
                         </div>
                         <ChevronRight
-                          className={`w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ${
+                          className={`w-5 h-5 text-muted transition-transform shrink-0 ${
                             isExpanded ? "rotate-90" : ""
                           }`}
                         />
@@ -495,11 +494,11 @@ export default function DocsPage() {
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="border-t border-white/10 px-6 py-6 space-y-6"
+                          className="border-t border-edge px-6 py-6 space-y-6"
                         >
                           {/* Signature */}
                           <div>
-                            <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                            <h4 className="text-sm font-semibold text-muted uppercase tracking-wide mb-2">
                               Function Signature
                             </h4>
                             <CodeBlock
@@ -511,27 +510,27 @@ export default function DocsPage() {
                           {/* Parameters */}
                           {method.params && method.params.length > 0 && (
                             <div>
-                              <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                              <h4 className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">
                                 Parameters
                               </h4>
                               <div className="space-y-2">
                                 {method.params.map((param) => (
                                   <div
                                     key={param.name}
-                                    className="flex items-start gap-3 p-3 rounded-lg bg-black/20 border border-white/5"
+                                    className="flex items-start gap-3 p-3 rounded-lg bg-foreground/3 border border-edge"
                                   >
-                                    <code className="font-mono text-sm text-blue-400 font-semibold">
+                                    <code className="font-mono text-sm text-accent font-semibold">
                                       {param.name}
                                     </code>
-                                    <span className="text-xs px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                    <span className="text-xs px-2 py-0.5 rounded bg-foreground/5 text-muted border border-edge-strong">
                                       {param.type}
                                     </span>
                                     {param.required && (
-                                      <span className="text-xs px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
+                                      <span className="text-xs px-2 py-0.5 rounded bg-red-500/10 text-red-600 dark:text-red-400 border border-red-600/30 dark:border-red-500/20">
                                         required
                                       </span>
                                     )}
-                                    <p className="text-sm text-gray-400 flex-1">
+                                    <p className="text-sm text-muted flex-1">
                                       {param.description}
                                     </p>
                                   </div>
@@ -542,11 +541,11 @@ export default function DocsPage() {
 
                           {/* Returns */}
                           <div>
-                            <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                            <h4 className="text-sm font-semibold text-muted uppercase tracking-wide mb-2">
                               Returns
                             </h4>
-                            <div className="p-3 rounded-lg bg-black/20 border border-white/5">
-                              <code className="text-sm font-mono text-green-400">
+                            <div className="p-3 rounded-lg bg-foreground/3 border border-edge">
+                              <code className="text-sm font-mono text-green-700 dark:text-green-400">
                                 {method.returns}
                               </code>
                             </div>
@@ -554,7 +553,7 @@ export default function DocsPage() {
 
                           {/* Example */}
                           <div>
-                            <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                            <h4 className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">
                               Example Usage
                             </h4>
                             <CodeBlock
@@ -574,7 +573,7 @@ export default function DocsPage() {
       </section>
 
       {/* Type Definitions Section */}
-      <section className="mx-auto max-w-6xl px-4 py-16 border-t border-white/10">
+      <section className="mx-auto max-w-6xl px-4 py-16 border-t border-edge">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -582,16 +581,16 @@ export default function DocsPage() {
           className="space-y-6"
         >
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold text-foreground">
               Type Definitions
             </h2>
-            <p className="text-gray-400">TypeScript interfaces for SDK types</p>
+            <p className="text-muted">TypeScript interfaces for SDK types</p>
           </div>
 
           <div className="space-y-4">
             {/* Core Campaign Types */}
-            <div className="bg-white/[0.02] border border-white/10 rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-3 text-white">
+            <div className="bg-surface border border-edge rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-3 text-foreground">
                 Campaign Types
               </h3>
               <CodeBlock
@@ -627,8 +626,8 @@ export default function DocsPage() {
             </div>
 
             {/* Meta Resource Types */}
-            <div className="bg-white/[0.02] border border-white/10 rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-3 text-white">
+            <div className="bg-surface border border-edge rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-3 text-foreground">
                 Meta Resource Types
               </h3>
               <CodeBlock
@@ -683,8 +682,8 @@ interface Pixel {
             </div>
 
             {/* Response Types */}
-            <div className="bg-white/[0.02] border border-white/10 rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-3 text-white">
+            <div className="bg-surface border border-edge rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-3 text-foreground">
                 Response Types
               </h3>
               <CodeBlock

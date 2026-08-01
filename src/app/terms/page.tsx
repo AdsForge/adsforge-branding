@@ -26,7 +26,7 @@ export default function TermsPage() {
           </Link>
         </div>
 
-        <article className="prose prose-invert prose-lg max-w-none">
+        <article className="prose dark:prose-invert prose-lg max-w-none">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Terms and Conditions
           </h1>
@@ -314,7 +314,7 @@ export default function TermsPage() {
               Your use of the Service is also governed by our{" "}
               <Link
                 href="/privacy"
-                className="text-blue-400 hover:text-blue-300"
+                className="text-accent hover:text-accent-bright"
               >
                 Privacy Policy
               </Link>
@@ -334,7 +334,7 @@ export default function TermsPage() {
               If you have any dispute with us, you agree to first contact us at{" "}
               <a
                 href="mailto:adsforgeio@gmail.com"
-                className="text-blue-400 hover:text-blue-300"
+                className="text-accent hover:text-accent-bright"
               >
                 adsforgeio@gmail.com
               </a>{" "}
@@ -395,7 +395,7 @@ export default function TermsPage() {
                 Email:{" "}
                 <a
                   href="mailto:adsforgeio@gmail.com"
-                  className="text-blue-400 hover:text-blue-300"
+                  className="text-accent hover:text-accent-bright"
                 >
                   adsforgeio@gmail.com
                 </a>
@@ -404,7 +404,7 @@ export default function TermsPage() {
                 Website:{" "}
                 <a
                   href="https://adsforge.io"
-                  className="text-blue-400 hover:text-blue-300"
+                  className="text-accent hover:text-accent-bright"
                 >
                   https://adsforge.io
                 </a>

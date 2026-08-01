@@ -26,7 +26,7 @@ export default function PrivacyPage() {
           </Link>
         </div>
 
-        <article className="prose prose-invert prose-lg max-w-none">
+        <article className="prose dark:prose-invert prose-lg max-w-none">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Privacy Policy
           </h1>
@@ -170,7 +170,7 @@ export default function PrivacyPage() {
               To exercise these rights, please contact us at{" "}
               <a
                 href="mailto:adsforgeio@gmail.com"
-                className="text-blue-400 hover:text-blue-300"
+                className="text-accent hover:text-accent-bright"
               >
                 adsforgeio@gmail.com
               </a>
@@ -246,7 +246,7 @@ export default function PrivacyPage() {
                 Email:{" "}
                 <a
                   href="mailto:adsforgeio@gmail.com"
-                  className="text-blue-400 hover:text-blue-300"
+                  className="text-accent hover:text-accent-bright"
                 >
                   adsforgeio@gmail.com
                 </a>
@@ -255,7 +255,7 @@ export default function PrivacyPage() {
                 Website:{" "}
                 <a
                   href="https://adsforge.io"
-                  className="text-blue-400 hover:text-blue-300"
+                  className="text-accent hover:text-accent-bright"
                 >
                   https://adsforge.io
                 </a>

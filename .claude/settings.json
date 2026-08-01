@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/Users/akaki.khotcholava/Documents/Dev/@projects/adsforge-branding/node_modules/.bin/biome check *)",
+      "Bash(git -C /Users/akaki.khotcholava/Documents/Dev/@projects/adsforge-branding worktree remove /private/tmp/claude-502/-Users-akaki-khotcholava-Documents-Dev--projects-adsforge-branding/f2fc8873-7e98-441f-b629-6d229b8ab179/scratchpad/base --force)"
+    ]
+  }
+}
