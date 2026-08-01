@@ -74,7 +74,7 @@ function FeatureCell({
   return (
     <motion.div
       ref={ref}
-      className="border-r border-b border-edge p-6 transition-colors hover:bg-white/2 md:p-8"
+      className="border-r border-b border-edge p-6 transition-colors hover:bg-foreground/3 md:p-8"
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
     >

@@ -388,7 +388,7 @@ export default function PhonePreview({
       onPointerLeave={handlePointerLeave}
     >
       <motion.div
-        className="relative w-[300px] rounded-[2.75rem] border border-edge-strong bg-[#0d0d0c] p-2.5 shadow-[0_32px_90px_-28px_rgba(0,0,0,0.9)] transition-opacity duration-300"
+        className="relative w-[300px] rounded-[2.75rem] border border-[#2a2925] bg-[#0d0d0c] p-2.5 shadow-card transition-opacity duration-300"
         style={{
           rotateX: springRotateX,
           rotateY: springRotateY,

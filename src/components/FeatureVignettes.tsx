@@ -143,7 +143,7 @@ export function AudienceVignette({ active }: VignetteProps) {
           cy="32"
           r={r}
           fill="none"
-          stroke="#2d2a24"
+          stroke="var(--edge-strong)"
           strokeWidth="1"
         />
       ))}
@@ -152,7 +152,7 @@ export function AudienceVignette({ active }: VignetteProps) {
         cx="48"
         cy="32"
         r="2.5"
-        fill="#ffcf48"
+        fill="var(--accent)"
         initial={run === 0 ? false : { y: -26 }}
         animate={{ y: 0 }}
         transition={SPRING}
@@ -250,11 +250,11 @@ export function SafeVignette({ active }: VignetteProps) {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d={SHIELD_PATH} stroke="#2d2a24" />
+      <path d={SHIELD_PATH} stroke="var(--edge-strong)" />
       <motion.path
         key={`shield-${run}`}
         d={SHIELD_PATH}
-        stroke="#ffcf48"
+        stroke="var(--accent)"
         strokeOpacity="0.7"
         initial={run === 0 ? false : { pathLength: 0 }}
         animate={{ pathLength: 1 }}
@@ -263,7 +263,7 @@ export function SafeVignette({ active }: VignetteProps) {
       <motion.path
         key={`check-${run}`}
         d={SHIELD_CHECK_PATH}
-        stroke="#ffcf48"
+        stroke="var(--accent)"
         strokeOpacity="0.7"
         initial={run === 0 ? false : { pathLength: 0 }}
         animate={{ pathLength: 1 }}

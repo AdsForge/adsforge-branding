@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { EASE, SPRING } from "@/lib/motion";
+import ThemeToggle from "./ThemeToggle";
 import { btnPrimary } from "./ui";
 
 const LOGIN_URL = "https://app.adsforge.io/login";
@@ -47,15 +48,21 @@ function LogoCluster({ onClick }: { onClick?: () => void }) {
 function NavLink({
   href,
   label,
+  index,
   active,
   ariaCurrent,
   reduceMotion,
+  inkId,
+  textClass,
 }: {
   href: string;
   label: string;
+  index?: string;
   active: boolean;
   ariaCurrent?: "true" | "page";
   reduceMotion: boolean;
+  inkId: string;
+  textClass: string;
 }) {
   const [lifted, setLifted] = useState(false);
 
@@ -63,12 +70,21 @@ function NavLink({
     <Link
       href={href}
       aria-current={ariaCurrent}
-      className={`relative ${focusRing}`}
+      className={`relative inline-flex items-baseline ${textClass} ${focusRing}`}
       onMouseEnter={() => setLifted(true)}
       onMouseLeave={() => setLifted(false)}
       onFocus={() => setLifted(true)}
       onBlur={() => setLifted(false)}
     >
+      {index !== undefined && (
+        <span
+          className={`mr-1.5 font-mono text-[10px] ${
+            active ? "text-accent" : "text-faint"
+          }`}
+        >
+          {index}
+        </span>
+      )}
       <span className="block overflow-hidden">
         {reduceMotion ? (
           <span
@@ -102,7 +118,7 @@ function NavLink({
       {active && (
         <motion.span
           aria-hidden
-          layoutId="nav-ink"
+          layoutId={inkId}
           transition={reduceMotion ? { duration: 0 } : SPRING}
           className="absolute left-0 top-[calc(100%+6px)] h-px w-full bg-accent"
         />
@@ -115,7 +131,10 @@ export function Navbar() {
   const pathname = usePathname();
   const reduceMotion = useReducedMotion() ?? false;
 
+  /* Mobile bar backdrop */
   const [condensed, setCondensed] = useState(false);
+  /* Desktop floating dock */
+  const [docked, setDocked] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -127,11 +146,16 @@ export function Navbar() {
   const onHome = pathname === "/";
   const onBlog = pathname === "/blog" || pathname.startsWith("/blog/");
 
-  /* Condense on scroll, with hysteresis: down past 24, back up below 8. */
+  /*
+    Scroll-driven state, both with hysteresis:
+    - mobile bar backdrop: on past 24, released below 8
+    - dock: shows past 160, hides below 120
+  */
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
       setCondensed((prev) => (prev ? y >= 8 : y > 24));
+      setDocked((prev) => (prev ? y >= 120 : y > 160));
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -269,116 +293,197 @@ export function Navbar() {
       };
 
   return (
-    <header className="sticky top-0 z-50 w-full">
-      <motion.div
-        className="relative"
-        initial={false}
-        animate={{ height: condensed ? 56 : 72 }}
-        transition={reduceMotion ? { duration: 0 } : SPRING}
-      >
-        {/* Backdrop + hairline, faded in once condensed */}
-        <motion.div
-          aria-hidden
-          className="absolute inset-0 border-b border-edge bg-background/85 backdrop-blur"
-          initial={false}
-          animate={{ opacity: condensed ? 1 : 0 }}
-          transition={
-            reduceMotion ? { duration: 0 } : { duration: 0.3, ease: EASE }
-          }
-        />
+    <>
+      {/* A) Top header — static, in-flow, desktop only */}
+      <header className="hidden w-full md:block">
+        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4">
+          <LogoCluster />
 
-        <div className="relative mx-auto flex h-full max-w-6xl items-center justify-between px-4">
-          <LogoCluster onClick={() => setOpen(false)} />
+          <div className="flex items-center gap-7">
+            <nav aria-label="Primary" className="flex items-center gap-7">
+              {LINKS.map((link, i) => (
+                <NavLink
+                  key={link.href}
+                  href={link.href}
+                  label={link.label}
+                  index={`0${i + 1}`}
+                  active={isActive(link)}
+                  ariaCurrent={ariaCurrentFor(link)}
+                  reduceMotion={reduceMotion}
+                  inkId="nav-ink-top"
+                  textClass="text-sm"
+                />
+              ))}
+            </nav>
 
-          <nav className="hidden items-center gap-7 text-sm md:flex">
-            {LINKS.map((link) => (
-              <NavLink
-                key={link.href}
-                href={link.href}
-                label={link.label}
-                active={isActive(link)}
-                ariaCurrent={ariaCurrentFor(link)}
-                reduceMotion={reduceMotion}
-              />
-            ))}
-          </nav>
+            <ThemeToggle />
 
-          <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-3 md:flex">
-              <a
-                href={LOGIN_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`text-sm text-muted transition-colors hover:text-foreground ${focusRing}`}
+            <a
+              href={LOGIN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`text-sm text-muted transition-colors hover:text-foreground ${focusRing}`}
+            >
+              Log in
+            </a>
+            <a
+              href={LOGIN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={btnPrimary}
+            >
+              Get started
+            </a>
+          </div>
+        </div>
+      </header>
+
+      {/* B) The Dock — floating capsule once the header scrolls away */}
+      <div className="pointer-events-none fixed inset-x-0 top-4 z-50 hidden justify-center md:flex">
+        <AnimatePresence>
+          {docked && (
+            <motion.div
+              className="pointer-events-auto flex h-12 items-center gap-5 rounded-xl border border-edge-strong bg-background/90 px-3 shadow-card backdrop-blur"
+              initial={reduceMotion ? { opacity: 0 } : { y: -24, opacity: 0 }}
+              animate={reduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
+              exit={
+                reduceMotion
+                  ? { opacity: 0, transition: { duration: 0.01 } }
+                  : {
+                      y: -12,
+                      opacity: 0,
+                      transition: { duration: 0.2, ease: EASE },
+                    }
+              }
+              transition={reduceMotion ? { duration: 0.01 } : SPRING}
+            >
+              <Link
+                href="/"
+                aria-label="AdsForge home"
+                className={`inline-flex items-center ${focusRing}`}
               >
-                Log in
-              </a>
+                <Image
+                  src="/logos/Color Dark - Logo.svg"
+                  alt=""
+                  width={26}
+                  height={17}
+                />
+              </Link>
+
+              <span aria-hidden className="h-5 w-px bg-edge" />
+
+              <nav
+                aria-label="Quick navigation"
+                className="flex items-center gap-5"
+              >
+                {LINKS.map((link) => (
+                  <NavLink
+                    key={link.href}
+                    href={link.href}
+                    label={link.label}
+                    active={isActive(link)}
+                    ariaCurrent={ariaCurrentFor(link)}
+                    reduceMotion={reduceMotion}
+                    inkId="nav-ink-dock"
+                    textClass="text-[13px]"
+                  />
+                ))}
+              </nav>
+
+              <span aria-hidden className="h-5 w-px bg-edge" />
+
+              <ThemeToggle className="h-8! w-8!" />
+
               <a
                 href={LOGIN_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={btnPrimary}
+                className={`rounded-md bg-accent-fill px-3 py-1.5 text-[13px] font-medium text-black transition-colors hover:bg-accent-fill-hover ${focusRing}`}
               >
                 Get started
               </a>
-            </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
-            <button
-              ref={triggerRef}
-              type="button"
-              aria-expanded={open}
-              aria-controls="mobile-nav"
-              aria-label={open ? "Close menu" : "Open menu"}
-              onClick={() => setOpen((v) => !v)}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-edge-strong md:hidden ${focusRing}`}
-            >
-              {reduceMotion ? (
-                <span className="relative block h-4 w-4">
-                  <motion.span
-                    aria-hidden
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-1.25"
-                    initial={false}
-                    animate={{ opacity: open ? 0 : 1 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    <span className="h-[1.5px] w-4 bg-foreground" />
-                    <span className="h-[1.5px] w-4 bg-foreground" />
-                  </motion.span>
-                  <motion.span
-                    aria-hidden
-                    className="absolute inset-0"
-                    initial={false}
-                    animate={{ opacity: open ? 1 : 0 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    <span className="absolute left-0 top-1/2 h-[1.5px] w-4 -translate-y-1/2 rotate-45 bg-foreground" />
-                    <span className="absolute left-0 top-1/2 h-[1.5px] w-4 -translate-y-1/2 -rotate-45 bg-foreground" />
-                  </motion.span>
-                </span>
-              ) : (
-                <span className="flex flex-col items-center justify-center gap-1.25">
-                  <motion.span
-                    className="block h-[1.5px] w-4 bg-foreground"
-                    initial={false}
-                    animate={
-                      open ? { y: 3.25, rotate: 45 } : { y: 0, rotate: 0 }
-                    }
-                    transition={SPRING}
-                  />
-                  <motion.span
-                    className="block h-[1.5px] w-4 bg-foreground"
-                    initial={false}
-                    animate={
-                      open ? { y: -3.25, rotate: -45 } : { y: 0, rotate: 0 }
-                    }
-                    transition={SPRING}
-                  />
-                </span>
-              )}
-            </button>
+      {/* C) Mobile bar — sticky, below md only */}
+      <header className="sticky top-0 z-50 w-full md:hidden">
+        <div className="relative h-14">
+          {/* Backdrop + hairline, faded in once scrolled */}
+          <motion.div
+            aria-hidden
+            className="absolute inset-0 border-b border-edge bg-background/85 backdrop-blur"
+            initial={false}
+            animate={{ opacity: condensed ? 1 : 0 }}
+            transition={
+              reduceMotion ? { duration: 0 } : { duration: 0.3, ease: EASE }
+            }
+          />
+
+          <div className="relative mx-auto flex h-full max-w-6xl items-center justify-between px-4">
+            <LogoCluster onClick={() => setOpen(false)} />
+
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+
+              <button
+                ref={triggerRef}
+                type="button"
+                aria-expanded={open}
+                aria-controls="mobile-nav"
+                aria-label={open ? "Close menu" : "Open menu"}
+                onClick={() => setOpen((v) => !v)}
+                className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-edge-strong ${focusRing}`}
+              >
+                {reduceMotion ? (
+                  <span className="relative block h-4 w-4">
+                    <motion.span
+                      aria-hidden
+                      className="absolute inset-0 flex flex-col items-center justify-center gap-1.25"
+                      initial={false}
+                      animate={{ opacity: open ? 0 : 1 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <span className="h-[1.5px] w-4 bg-foreground" />
+                      <span className="h-[1.5px] w-4 bg-foreground" />
+                    </motion.span>
+                    <motion.span
+                      aria-hidden
+                      className="absolute inset-0"
+                      initial={false}
+                      animate={{ opacity: open ? 1 : 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <span className="absolute left-0 top-1/2 h-[1.5px] w-4 -translate-y-1/2 rotate-45 bg-foreground" />
+                      <span className="absolute left-0 top-1/2 h-[1.5px] w-4 -translate-y-1/2 -rotate-45 bg-foreground" />
+                    </motion.span>
+                  </span>
+                ) : (
+                  <span className="flex flex-col items-center justify-center gap-1.25">
+                    <motion.span
+                      className="block h-[1.5px] w-4 bg-foreground"
+                      initial={false}
+                      animate={
+                        open ? { y: 3.25, rotate: 45 } : { y: 0, rotate: 0 }
+                      }
+                      transition={SPRING}
+                    />
+                    <motion.span
+                      className="block h-[1.5px] w-4 bg-foreground"
+                      initial={false}
+                      animate={
+                        open ? { y: -3.25, rotate: -45 } : { y: 0, rotate: 0 }
+                      }
+                      transition={SPRING}
+                    />
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </motion.div>
+      </header>
 
       {/* Mobile menu overlay */}
       <AnimatePresence>
@@ -404,21 +509,24 @@ export function Navbar() {
               ease: EASE,
             }}
           >
-            {/* Mirror of the header row so the icon appears not to move */}
+            {/* Mirror of the mobile bar so the icon appears not to move */}
             <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
               <LogoCluster onClick={() => setOpen(false)} />
-              <button
-                ref={closeBtnRef}
-                type="button"
-                aria-label="Close menu"
-                onClick={() => setOpen(false)}
-                className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-edge-strong ${focusRing}`}
-              >
-                <span className="relative block h-4 w-4">
-                  <span className="absolute left-0 top-1/2 h-[1.5px] w-4 -translate-y-1/2 rotate-45 bg-foreground" />
-                  <span className="absolute left-0 top-1/2 h-[1.5px] w-4 -translate-y-1/2 -rotate-45 bg-foreground" />
-                </span>
-              </button>
+              <div className="flex items-center gap-3">
+                <ThemeToggle />
+                <button
+                  ref={closeBtnRef}
+                  type="button"
+                  aria-label="Close menu"
+                  onClick={() => setOpen(false)}
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-edge-strong ${focusRing}`}
+                >
+                  <span className="relative block h-4 w-4">
+                    <span className="absolute left-0 top-1/2 h-[1.5px] w-4 -translate-y-1/2 rotate-45 bg-foreground" />
+                    <span className="absolute left-0 top-1/2 h-[1.5px] w-4 -translate-y-1/2 -rotate-45 bg-foreground" />
+                  </span>
+                </button>
+              </div>
             </div>
 
             <nav className="absolute inset-x-0 top-[18vh] px-6">
@@ -491,7 +599,7 @@ export function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+    </>
   );
 }
 

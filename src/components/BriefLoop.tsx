@@ -221,7 +221,7 @@ export default function BriefLoop() {
     // enhancement, so the wrapper stays a plain container.
     // biome-ignore lint/a11y/noStaticElementInteractions: pause-on-hover is decorative
     <div
-      className="overflow-hidden rounded-xl border border-edge-strong bg-surface shadow-[0_16px_48px_-24px_rgba(0,0,0,0.8)]"
+      className="overflow-hidden rounded-xl border border-edge-strong bg-surface shadow-card"
       onPointerEnter={pause}
       onPointerLeave={resume}
       onFocus={pause}

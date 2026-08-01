@@ -399,7 +399,7 @@ export default function LiveDemo() {
                   {platform === p && (
                     <motion.span
                       layoutId="platform-pill"
-                      className="absolute inset-0 rounded-md bg-white/7"
+                      className="absolute inset-0 rounded-md bg-foreground/8"
                       transition={
                         reduceMotion
                           ? { duration: 0 }

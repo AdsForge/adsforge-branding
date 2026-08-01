@@ -82,7 +82,7 @@ export default async function BlogPostPage({
       <main className="mx-auto max-w-3xl px-4 py-20">
         <Link
           href="/blog"
-          className="text-sm opacity-60 hover:opacity-100 transition-opacity"
+          className="text-sm text-muted hover:text-foreground transition-colors"
         >
           &larr; Back to blog
         </Link>
@@ -91,7 +91,7 @@ export default async function BlogPostPage({
           <header>
             <time
               dateTime={post.date}
-              className="text-xs opacity-60 uppercase tracking-wide"
+              className="text-xs text-faint uppercase tracking-wide"
             >
               {new Date(post.date).toLocaleDateString("en-US", {
                 year: "numeric",
@@ -102,13 +102,13 @@ export default async function BlogPostPage({
             <h1 className="mt-2 text-3xl md:text-4xl font-semibold tracking-tight">
               {post.title}
             </h1>
-            <p className="mt-3 text-lg opacity-70">{post.description}</p>
+            <p className="mt-3 text-lg text-muted">{post.description}</p>
             {post.tags.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {post.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs opacity-70"
+                    className="rounded-full border border-edge bg-surface px-2.5 py-0.5 text-xs text-muted"
                   >
                     {tag}
                   </span>
@@ -117,7 +117,7 @@ export default async function BlogPostPage({
             )}
           </header>
 
-          <div className="prose prose-invert prose-sm md:prose-base mt-10 max-w-none prose-headings:tracking-tight prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline">
+          <div className="prose dark:prose-invert prose-sm md:prose-base mt-10 max-w-none prose-headings:tracking-tight prose-a:text-accent prose-a:no-underline hover:prose-a:underline">
             <MDXRemote source={post.content} />
           </div>
         </article>

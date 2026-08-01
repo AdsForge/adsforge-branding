@@ -2,11 +2,33 @@
 @plugin "@tailwindcss/typography";
 
 /*
-  AdsForge design tokens — dark, precise, warm gold accent.
-  The accent is reserved for primary actions and key moments;
-  everything else stays monochrome.
+  AdsForge design tokens — precise, warm gold accent, two themes.
+  Light is warm paper; dark is the warm near-black canvas.
+  `--accent` is the adaptive gold INK (text, underlines, rails) and
+  must hold contrast on the background; `--accent-fill` is the brand
+  gold SURFACE (buttons) and stays vivid in both themes with black
+  text on top. A pre-paint script in layout.tsx sets
+  html[data-theme] before first render.
 */
 :root {
+  color-scheme: light;
+  --background: #faf9f6;
+  --surface: #ffffff;
+  --foreground: #1c1a16;
+  --muted: #68645c;
+  --faint: #9a958a;
+  --edge: #eae7e0;
+  --edge-strong: #d9d4c9;
+  --accent: #8a6a00;
+  --accent-bright: #a37e00;
+  --accent-fill: #ffcf48;
+  --accent-fill-hover: #f2c235;
+  --card-shadow: 0 16px 40px -28px rgba(28, 26, 22, 0.25);
+  --grain-opacity: 0.045;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
   --background: #0a0a09;
   --surface: #111110;
   --foreground: #edecea;
@@ -16,7 +38,14 @@
   --edge-strong: #2d2a24;
   --accent: #ffcf48;
   --accent-bright: #ffdb70;
+  --accent-fill: #ffcf48;
+  --accent-fill-hover: #ffdb70;
+  --card-shadow: 0 16px 48px -24px rgba(0, 0, 0, 0.8);
+  --grain-opacity: 0.032;
 }
+
+/* `dark:` utilities key off the data-theme attribute, not media queries. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -28,6 +57,9 @@
   --color-edge-strong: var(--edge-strong);
   --color-accent: var(--accent);
   --color-accent-bright: var(--accent-bright);
+  --color-accent-fill: var(--accent-fill);
+  --color-accent-fill-hover: var(--accent-fill-hover);
+  --shadow-card: var(--card-shadow);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -43,7 +75,7 @@ body {
 }
 
 ::selection {
-  background: var(--accent);
+  background: var(--accent-fill);
   color: #000;
 }
 
@@ -91,7 +123,7 @@ body::after {
   inset: 0;
   z-index: 80;
   pointer-events: none;
-  opacity: 0.032;
+  opacity: var(--grain-opacity);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 160px 160px;
 }

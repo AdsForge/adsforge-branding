@@ -42,7 +42,7 @@ function InlineField({
   const [focused, setFocused] = useState(false);
 
   const hairline = invalid
-    ? "border-red-400/60"
+    ? "border-red-600/50 dark:border-red-400/60"
     : reduceMotion && focused
       ? "border-accent"
       : "border-edge-strong";
@@ -192,7 +192,7 @@ export default function GetInTouch() {
     : [];
 
   const messageHairline = showMessageError
-    ? "border-red-400/60"
+    ? "border-red-600/50 dark:border-red-400/60"
     : reduceMotion && messageFocused
       ? "border-accent"
       : "border-edge-strong";
@@ -229,7 +229,7 @@ export default function GetInTouch() {
         <Reveal delay={0.1}>
           <form
             onSubmit={onSubmit}
-            className="relative mt-10 overflow-hidden rounded-xl border border-edge-strong bg-surface shadow-[0_16px_48px_-24px_rgba(0,0,0,0.8)]"
+            className="relative mt-10 overflow-hidden rounded-xl border border-edge-strong bg-surface shadow-card"
           >
             {/* Honeypot */}
             <input
@@ -476,7 +476,7 @@ export default function GetInTouch() {
                     }
                     exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
                     transition={{ duration: 0.2, ease: EASE }}
-                    className="font-mono text-xs text-red-400"
+                    className="font-mono text-xs text-red-600 dark:text-red-400"
                   >
                     err: {line.key} — {line.text}
                   </motion.p>
